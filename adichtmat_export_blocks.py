@@ -8,6 +8,7 @@
 # created 2021-03-12
 # last modified 2021-05-09
 
+import sys
 import adichtmat
 
 
@@ -22,10 +23,10 @@ def adichtmat_export_blocks(filename):
     ad.export_comments_table()
 
 def main():
-    #script = sys.argv[0]
-    #filename = sys.argv[1]
-    filename = '/Users/diedriam/DATA/DATA_Local/AD040H_HarbB/Recordings/2021-03-02_0900_HarB_AD040H_edit.mat'
-
+    script = sys.argv[0]
+    filename = sys.argv[1]
     adichtmat_export_blocks(filename)
 
-main()
+if __name__ == "__main__":
+    main()
+

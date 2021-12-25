@@ -6,8 +6,9 @@
 #
 # by Andre Diedrich
 # created 2021-03-12
-# last modified 2021-05-09
+# last modified 2021-11-23
 
+import sys
 import adichtmat
 
 def adichtmat_saveto_hdf5(filename):
@@ -17,10 +18,9 @@ def adichtmat_saveto_hdf5(filename):
     ad.save_to_hdf5()
 
 def main():
-    #script = sys.argv[0]
-    #filename = sys.argv[1]
-    filename = '/Users/diedriam/DATA/DATA_Local/AD045P_ThoS/2021-04-19_0800_AD045P_ThoS_Day0/2021-04-19_0800_AD045P_ThoS_Day0_edited_info.mat'
-
+    script = sys.argv[0]
+    filename = sys.argv[1]
     adichtmat_saveto_hdf5(filename)
 
-main()
+if __name__ == "__main__":
+    main()
