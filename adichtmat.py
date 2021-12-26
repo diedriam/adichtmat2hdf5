@@ -287,7 +287,6 @@ class adichtmatfile(object):
         matblockdata[u'samplerate'] = samplerate.astype(np.float64)
         matblockdata[u'rangemax'] = rangemax.astype(np.float64)
         matblockdata[u'rangemin'] = rangemin.astype(np.float64)
-
         matblockdata[u'unittextmap'] = unittextmap
         matblockdata[u'unittext'] = unittext
         matblockdata[u'com'] = com
@@ -313,6 +312,8 @@ class adichtmatfile(object):
         # matblockdata[u'data']  = self.data['data'][0][indx]
 
         matblockdata[u'data']  = [self.data['data'][0][istart[0]-1:iend[0]] for istart , iend in zip(datastart.astype(int),dataend.astype(int))]
+        #hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
+        #                  format='7.3')
         hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
                           format='7.3')
         
