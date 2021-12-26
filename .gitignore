@@ -1,2 +1,3 @@
 .vsstudio
 *.mat
+__pycache__
