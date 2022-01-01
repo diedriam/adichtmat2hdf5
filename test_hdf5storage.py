@@ -1,6 +1,6 @@
 import adichtmat
 
-filename = '/Users/diedriam/DATA/DATA_Local/AD045P_ThoS/2021-04-19_0800_AD045P_ThoS_Day0/2021-04-19_0800_AD045P_ThoS_Day0_edited_info.mat'
+filename = '/Users/diedriam/DATA/DATA_Local/tmp/record_with_old_neuroamp.mat'
 ad = adichtmat.adichtmatfile(filename)
 ad.loadmat()
 ad.save_to_hdf5()
