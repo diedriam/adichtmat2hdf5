@@ -380,7 +380,7 @@ class adichtmatfile(object):
         com[:, 1] = 1
 
         # correct tick_pos of comment
-        com[:, 2] = 1 + com[:, 2] - start_tick
+        com[:, 2] = com[:, 2] - start_tick
 
         # +1 for index matlab
 
@@ -398,7 +398,7 @@ class adichtmatfile(object):
 
         sel_offset_sec = start_tick / tickrate
         sel_offset_smp = sel_offset_sec * samplerate
-        sel_len_sec = (stop_tick - start_tick+1) / tickrate
+        sel_len_sec = (stop_tick - start_tick) / tickrate
         sel_len_smp = samplerate * sel_len_sec
 
         datalen = self.get_datalen_ticks(blk=blk)
@@ -427,7 +427,7 @@ class adichtmatfile(object):
             filename = self.filename
             fn_out = os.path.basename(filename)
             # fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk.astype(int))
-            fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk+1)
+            fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk)
         else:
             fn_out = filename
         path = os.path.dirname(fn_out)
@@ -442,7 +442,7 @@ class adichtmatfile(object):
 
         matblockdata[u'blocktimes'] = blocktimes.astype(np.float64)
         matblockdata[u'datastart'] = 1 + (datastart2 - datastart2[0, 0]).astype(np.float64)
-        matblockdata[u'dataend'] = 1 + (dataend2 - datastart2[0, 0]).astype(np.float64)
+        matblockdata[u'dataend'] = (dataend2 - datastart2[0, 0]).astype(np.float64)
         matblockdata[u'firstsampleoffset'] = firstsampleoffset.astype(np.float64)
         matblockdata[u'titles'] = titles
         matblockdata[u'tickrate'] = tickrate.astype(np.float64)
