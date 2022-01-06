@@ -56,6 +56,8 @@ class adichtmatfile(object):
             'unittextmap',
             'tickrate',
             'samplerate',
+            'scaleunits',
+            'scaleoffset',
         ]
         if ~self.flg_loaded_info:
             print('loading adicht matlab info ' + fn_in + ' ... ')
@@ -102,28 +104,28 @@ class adichtmatfile(object):
         blocktimes = [self.datenum_to_datetime(item) for item in datenums]
         return blocktimes
 
-    def get_firstsampleoffset(self, *indx, blk=0):
+    def get_firstsampleoffset(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['firstsampleoffset'][:, blk]
         else:
             values = self.mat_contents['firstsanpleoffset'][indx, blk]
         return values
 
-    def get_datastart(self, *indx, blk=0):
+    def get_datastart(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['datastart'][:, blk]
         else:
             values = self.mat_contents['datastart'][indx, blk]
         return values.astype(np.int64)
 
-    def get_dataend(self, *indx, blk=0):
+    def get_dataend(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk]
         else:
             values = self.mat_contents['dataend'][indx, blk]
         return values.astype(np.int64)
 
-    def get_datalen_smp(self, *indx, blk=0):
+    def get_datalen_smp(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk] - self.mat_contents['datastart'][:, blk] + 1
         else:
@@ -131,21 +133,21 @@ class adichtmatfile(object):
 
         return values
 
-    def get_datalen_sec(self, *indx, blk=0):
+    def get_datalen_sec(self, *indx, blk = 0):
         if not indx:
-            values = self.get_datalen_smp(blk=blk) / self.get_samplerates(blk=blk)
+            values = self.get_datalen_smp(blk = blk) / self.get_samplerates(blk = blk)
         else:
-            values = self.get_datalen_smp(indx, blk=blk) / self.get_samplerates(indx, blk=blk)
+            values = self.get_datalen_smp(indx, blk = blk) / self.get_samplerates(indx, blk = blk)
         return values
 
-    def get_datalen_ticks(self, *indx, blk=0) -> np.int64:
+    def get_datalen_ticks(self, *indx, blk = 0) -> np.int64:
         if not indx:
-            values = self.get_datalen_sec(blk=blk) * self.get_tickrates(blk)
+            values = self.get_datalen_sec(blk = blk) * self.get_tickrates(blk)
         else:
-            values = self.get_datalen_sec(indx, blk=blk) * self.get_tickrates(blk)
+            values = self.get_datalen_sec(indx, blk = blk) * self.get_tickrates(blk)
         return values
 
-    def get_rangemax(self, *indx, blk=0):
+    def get_rangemax(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['rangemax'][:, blk]
         else:
@@ -159,12 +161,12 @@ class adichtmatfile(object):
             values = self.mat_contents['rangemin'][indx, blk]
         return values.astype(np.float64)
 
-    def get_tickrates(self, *indx):
-        # indx is blood number counting from 0...
-        if not indx:
+    def get_tickrates(self, *blk):
+        # blk is block number counting from 0...
+        if not blk:
             values = self.mat_contents['tickrate'][0, :]
         else:
-            values = self.mat_contents['tickrate'][0, indx]
+            values = self.mat_contents['tickrate'][0, blk]
         return values.astype(np.float64)
 
     def get_samplerates(self, *indx, blk=0):
@@ -200,7 +202,9 @@ class adichtmatfile(object):
         for i, signame in enumerate(signame):
             print("signal {}: {}".format(i + 1, signame))
 
-    def get_comments_table(self, *blk, format='all'):
+
+    def get_comments_table(self, blk = -1, from_tick_pos = 0, to_tick_pos = -1, format='long')-> pd.DataFrame:
+        # blk is block number counting from 0, blk = blk_id -1
         # comtab: [sig_id, blk_id, tick_pos , type_id , text_id]
         # comments string = comtext[text_id]
         # note: labchart stores blk_id from 1...
@@ -229,9 +233,38 @@ class adichtmatfile(object):
         else:
             data = {'date_time': date_time, 'comments': comments,
                     'blk_id': blk_id, 'sig_id': sig_id, 'type_id': type_id, 'text_id': text_id, 'tick_pos': tick_pos}
-        df = pd.DataFrame.from_dict(data)
 
+        df = pd.DataFrame.from_dict(data)
+       
+
+        if (blk > -1)  & (blk < self.get_blockcount()):
+            df = df[df['blk_id'] == blk+1]
+
+        if from_tick_pos > 0:
+            df = df[ df.tick_pos >= from_tick_pos ]
+        
+        if to_tick_pos > from_tick_pos:
+            df = df[ df.tick_pos <= to_tick_pos ]
+     
         return df
+
+
+
+    def find_comment(self, token: str, blk = -1, searchmode = 'contains', from_tick_pos = 0, to_tick_pos = -1, format='long') -> pd.DataFrame:
+        """" searchmode can be contains (default) or startswith """
+        # blk is block number counting from 0, blk = blk_id -1
+        
+        df = self.get_comments_table(blk = blk, from_tick_pos = from_tick_pos, to_tick_pos = to_tick_pos, format = format )
+
+        if not df.empty:
+
+            if searchmode == 'startswith':
+                df = df[ df['comments'].str.startswith(token) ]
+            else: 
+                df = df[ df['comments'].str.contains(token) ]  
+
+        return  df
+
 
     def export_comments_table(self):
         df = self.get_comments_table(format='long')
@@ -242,7 +275,9 @@ class adichtmatfile(object):
         df.to_excel(fn_out, index=False)
         print('export comments table done.')
 
+
     def export_block(self, blk=0, filename=''):
+        # blk is block number counting from 0, blk = blk_id -1
         blocktimes = self.mat_contents['blocktimes'][0][blk]
         datastart = self.mat_contents.get('datastart', [])
         if len(datastart) == 0:
@@ -347,7 +382,7 @@ class adichtmatfile(object):
         return 1
 
     def export_block2(self, blk=0, start_tick=0, stop_tick=-1, filename=''):
-
+        # blk is block number counting from 0, blk = blk_id -1
         blkcount = self.get_blockcount()
         if (blk < 0) | (blk >= self.get_blockcount()):
             return -1
@@ -361,7 +396,7 @@ class adichtmatfile(object):
         # filter com table by block (col = 1)
         # we are using block number from 0,...
         # but in table block id counts from 1,...
-        com = com[com[:, 1] == (blk + 1)]
+        com = com[com[:, 1] == (blk)]
 
         # filter com table by tick_pos (col = 2) 
         if start_tick > 0:
@@ -485,6 +520,176 @@ class adichtmatfile(object):
         print(os.path.join(path, fn_out))
         print('export interval done.')
         return 1
+
+
+    def export_block3(self, blk = 0, start_tick=0, stop_tick=-1, filename=''):
+        # blk is block number counting from 0, blk = blk_id -1
+        
+        if not self.flg_loaded_info:
+            self.loadinfo()
+        
+        blkcount = self.get_blockcount()
+        if (blk < 0) | (blk > self.get_blockcount()):
+            print('invalid block number')
+            return -1
+
+        datalen = self.get_datalen_ticks(blk = blk)
+        tick_lenmax = max(datalen)
+        if stop_tick == -1: 
+            stop_tick = tick_lenmax
+
+
+        # generate com info and comtext filtered by block
+        com = self.mat_contents['com']
+
+        # filter com table by block (col = 1)
+        # we are using block number from 0,...
+        # but in table block id counts from 1,...
+        com = com[com[:, 1] == (blk+1)]
+
+        # filter com table by tick_pos (col = 2) 
+        if start_tick > 0:
+            com = com[com[:, 2] >= start_tick]
+        if stop_tick > start_tick:
+            com = com[com[:, 2] <= stop_tick]
+
+        # matlab has indx start from 1
+        # ToDo generate list and index of unique text only
+        indx = com[:, 4].astype(int) - 1
+        comtext = self.mat_contents['comtext']
+        comtext = np.array([comtext[i.astype(int)] for i in indx], dtype="object").reshape(-1, 1)
+        com[:, 4] = range(1, len(indx) + 1)
+
+        # correct block nr
+        com[:, 1] = 1
+
+        # correct tick_pos of comment
+        com[:, 2] = com[:, 2] - start_tick
+
+        # +1 for index matlab
+
+        # get tickrate and samplerate of the present block
+        tickrate = self.mat_contents['tickrate'][0, blk].astype(np.float64)
+        samplerate = self.mat_contents['samplerate'][:, blk].astype(np.float64).reshape(-1, 1)
+        blocktimes = self.mat_contents['blocktimes'][0, blk] + (start_tick / tickrate)/86400
+        
+
+        # transpose np arrays for matlab
+        # we have to transpose the np arrays because of matlab
+        # if we would choose save option oned_as = 'row' then strings are messed up in matlab
+        # it was impossible to find a way to avoid this
+        # so we transpose the np arrays instead
+
+    
+        sel_offset_sec = start_tick / tickrate
+        sel_offset_smp = sel_offset_sec * samplerate
+        sel_len_sec = (stop_tick - start_tick) / tickrate
+        sel_len_smp = samplerate * sel_len_sec
+     
+        if (start_tick < 0) | (start_tick > tick_lenmax):
+            print('error: start_tick out of range')
+            return
+        if (stop_tick < start_tick) | (stop_tick > tick_lenmax):
+            print('error: smaller start_tick or stop_tick out of range')
+            return
+
+        datastart2 = self.mat_contents['datastart'][:, blk].reshape(-1, 1) + sel_offset_smp
+
+        datastart2 = datastart2.flatten()
+        dataend2 = datastart2 + sel_len_smp.flatten()
+
+        firstsampleoffset = self.mat_contents['firstsampleoffset'][:, blk].astype(np.float64).reshape(-1, 1)
+        titles = np.array(self.mat_contents['titles'], dtype="object").reshape(-1, 1)
+        rangemax = self.mat_contents['rangemax'][:, blk].reshape(-1, 1).astype(np.float64)
+        rangemin = self.mat_contents['rangemin'][:, blk].reshape(-1, 1).astype(np.float64)
+
+        # filter unitextmap by block
+        unittextmap = self.mat_contents['unittextmap'][:, blk].astype(np.float64).reshape(-1, 1)
+        unittext = np.array(self.mat_contents['unittext'], dtype="object").reshape(-1, 1)
+
+        if len(filename) == 0:
+            filename = self.filename
+            fn_out = os.path.basename(filename)
+            # fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk.astype(int))
+            fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk.astype(int)+1)
+        else:
+            fn_out = filename
+        path = os.path.dirname(fn_out)
+
+        print('export {}...'.format(fn_out))
+
+        # create new dictionary for block export while keeping intact
+        matblockdata = {}
+        matblockdata[u'block_id_orig'] = blk+1
+        matblockdata[u'start_tick_orig'] = start_tick
+        matblockdata[u'stop_tick_orig'] = stop_tick
+
+        datastart3 = 1 + (datastart2 - datastart2[0]).astype(np.float64)
+        dataend3 = (dataend2 - datastart2[0]).astype(np.float64)
+
+        matblockdata[u'blocktimes'] = blocktimes.astype(np.float64)
+        matblockdata[u'datastart'] = datastart3.reshape(-1, 1)
+        matblockdata[u'dataend'] = dataend3.reshape(-1, 1)
+        matblockdata[u'firstsampleoffset'] = firstsampleoffset.astype(np.float64)
+        matblockdata[u'titles'] = titles
+        matblockdata[u'tickrate'] = tickrate.astype(np.float64)
+        matblockdata[u'samplerate'] = samplerate.astype(np.float64)
+        matblockdata[u'rangemax'] = rangemax.astype(np.float64)
+        matblockdata[u'rangemin'] = rangemin.astype(np.float64)
+        matblockdata[u'unittextmap'] = unittextmap
+        matblockdata[u'unittext'] = unittext
+        matblockdata[u'com'] = com
+        matblockdata[u'comtext'] = comtext
+
+        # check if scaleunit is present
+
+        # check if scaleunit is present
+        if 'scaleunits' in self.mat_contents:
+            matblockdata[u'scaleunits'] = self.mat_contents['scaleunits'][:, blk].astype(np.float64).reshape(-1,1)
+        if 'scaleoffset' in self.mat_contents:     
+            matblockdata[u'scaleoffset'] = self.mat_contents['scaleoffset'][:, blk].astype(np.float64).reshape(-1, 1)
+
+        if not self.flg_loaded_data:
+            self.loaddata()
+
+        # generate index is temporary solution
+        # ToDo: using multiple slices at once would be better
+
+        # indx = []
+        # for ind in range(len(datastart)):
+        #     indx += range(datastart[ind, 0].astype(int) - 1, dataend[ind, 0].astype(int))
+        # indx = [indx, slice(datastart[ind, 0].astype(int) - 1, dataend[ind, 0].astype(int))]
+        # indx = [slice( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart, dataend)]
+       
+        slices = [slice( istart.astype(int)-1, iend.astype(int)) for (istart , iend) in zip(datastart2, dataend2)]
+        data3 = (self.data['data'][0][s] for s in slices)
+        # does not work matblockdata[u'data']  = self.data['data'][0][slices]  
+
+        # ranges = [range( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart2, dataend2)]
+        # does not work matblockdata[u'data']  = self.data['data'][0][ranges]  
+
+
+        ind = 0
+        istart = datastart2.astype(int)-1
+        iend = dataend2.astype(int)-1
+        data=self.data['data'][0][istart[0]:iend[0]]
+        for ind in range(1,len(istart)):
+            data = np.concatenate((data, self.data['data'][0][istart[ind]:iend[ind]]))
+        matblockdata[u'data'] = data
+
+        #following lines generate a cell array which is nice but Matlab can't mempap and index this variable
+        #matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
+        #                         zip(datastart2.astype(int), dataend2.astype(int))]
+       
+
+        # hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
+        #                  format='7.3')
+        hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
+                          format='7.3')
+
+        print(os.path.join(path, fn_out))
+        print('export interval done.')
+        return 1    
 
     def save_to_hdf5(self, filename=''):
         """

@@ -9,107 +9,89 @@
 
 import adichtmat
 import os
-import sys
 from shutil import copyfile
 
 
 
-def adichtmat_export_blocks_by_token(filename, tokenid='', tokenvalue=''):
+def adichtmat_export_blocks_by_token(filename, token_id = '', token_longid='', token_start='', token_stop=''):
+    """ export block identified by token_longid and select interval defined by token_start and token_stop """
 
-    if len(tokenid) > 0 & (len(tokenvalue) > 0):
-        tokens = {tokenid: tokenvalue }
+    if len(token_id) > 0 & (len(token_longid) > 0):
+        tokens = {token_id: [token_longid, token_start, token_stop] }
     else:
         tokens = {
-            'VM': '@Valsalva Maneuver',
-            'NB': '@Normal Breathing',
-            'NS010': '@Necksuction 0.1 Hz',
-            'NSRND': '@Randomized Neck Suction',
-            'CB010': '@Controlled Breathing 0.1 Hz',
-            'CB025': '@Controlled Breathing 0.25 Hz',
-            'HV': '@Hyperventilation',
-            'BH': '@Breathhold',
-            'TT': '@HUT15',
+            'VM': ['@Valsalva Maneuver','[BLK_VM','VM_BLK]'],
+            'NB': ['@Normal Breathing', '[BLK_NB','NB_BLK]'],
+            'NS010': ['@Necksuction 0.1 Hz', '[BLK_NS010','NS010_BLK]'],
+            'NSRND': ['@Randomized Neck Suction', '[BLK_NSRND','NSRND_BLK]'],
+            'CB010': ['@Controlled Breathing 0.1 Hz', '[BLK_CB010','CB010_BLK]'],
+            'CB025': ['@Controlled Breathing 0.25 Hz', '[BLK_CB025','CB025_BLK]'],
+            'HV': ['@Hyperventilation', '[BLK_HV','HV_BLK]'],
+            'BH': ['@Breathhold', '[BLK_BH','BH_BLK]'],
+            'TT': ['@HUT15', '[BLK_TILT','TILT_BLK]'],
         }
     print(tokens)
-
-    tokenvalue_start = '[BLK_NB'
-    tokenvalue_stop = 'BLK_NB]'
-    tokenvalue_id = '@Normal Breathing'
-    tokenid = 'NB'
 
     path = os.path.dirname(filename)
     fn_base = os.path.basename(filename)
 
     ad = adichtmat.adichtmatfile(filename)
     ad.loadinfo()
+
+    """ get comtab in form of df """
     comtab = ad.get_comments_table()   
     
-    # TODO: convert to function for seaching token in comtab  
 
-    start_tick = 0
-    stop_tick = -1
-
-    a = comtab[comtab.comments.str.startswith(tokenvalue_start)]
-    if a.empty:
-        ('start token not found')
-        return -1
-
-    start_tick = a.tick_pos.iloc[0]
-    start_blk = a.blk_id.iloc[0]
-    start_dtm = a.date_time.iloc[0]
-
-    b = comtab[comtab.comments.str.startswith(tokenvalue_stop)]
-    if b.empty:
-        print('stop token not found')
-        return -2
-
-    stop_tick = b.tick_pos.iloc[-1]
-    stop_blk = b.blk_id.iloc[0]-1
-    stop_dtm = b.date_time.iloc[0]
-
-    c = comtab[comtab.comments.str.startswith(tokenvalue_id)]
-    if c.empty:
-        print('stop token not found')
-        return -2
-
-    id_tick = c.tick_pos.iloc[-1]
-    id_blk = c.blk_id.iloc[0]-1
-    id_dtm = c.date_time.iloc[0]
+    for id, tok in tokens.items():
     
+        # TODO: convert to function for seaching token in comtab  
+        token_longid= tok[0]
+        token_start = tok[1]
+        token_stop = tok[2]
+        
+        
+        """search main token id """
+        """time info in output filename is derived from main tokenid"""
+        c = ad.find_comment(token_longid, searchmode = 'startswith')
     
+        if c.empty:
+            print('block for ' + token_longid + ' not found.')
+        else:
+            
+            """call procedure for each found longid token """
+            """it would be better to put this in function"""
+            for index, row in c.iterrows():
+                longid_tick = row.tick_pos
+                longid_blk = row.blk_id-1 # we use blk = blk_id -1 counting from 0
+                longid_dtm = row.date_time
 
-    fn_root ='{}_blk{}_{}_T{}'.format(os.path.splitext(fn_base)[0], id_blk+1, tokenid, id_dtm.strftime('%H%M%S'))
+                """"search for closest start token before the longid""" 
+                a = ad.find_comment(token_start, longid_blk, to_tick_pos = longid_tick, searchmode = 'startswith')
+                if not a.empty:
+                    start_tick = a.tick_pos.iloc[-1]
+                else: 
+                    start_tick = 0    
+                """search for closest stop token after the longid"""
+                b = ad.find_comment(token_stop, longid_blk, from_tick_pos = start_tick, searchmode = 'startswith')
+                if not b.empty:
+                    stop_tick = b.tick_pos.iloc[0]
+                else:
+                    stop_tick = -1    
+            
+                fn_root ='{}_blk{}_{}_T{}'.format(os.path.splitext(fn_base)[0], longid_blk+1, id, longid_dtm.strftime('%H%M%S'))
+                path_out = os.path.join(path, fn_root)
 
-    path_out = os.path.join(path, fn_root)
-    if not os.path.isdir(path_out):
-        os.mkdir(path_out)
-    print('export blk  ' + fn_root + '.mat' + '...')
-    ad.export_block2(id_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
-    #ad.export_block(blk, filename = os.path.join(path_out, fn_root+'.mat'))
-    
+                if not os.path.isdir(path_out):
+                    os.mkdir(path_out)
+                print('export blk  ' + fn_root + '.mat' + '...')
+                ad.export_block3(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
+            
+                ''' copy pin file if available '''
+                fn_pin = os.path.splitext(fn_base)[0] +'.pin'
+                if os.path.join(path, fn_pin):
+                    print('coping pin ' + fn_pin + '...')
+                    copyfile(os.path.join(path, fn_pin), os.path.join(path_out, fn_root+'.pin'))
 
-    ad.loaddata()
-    for tokid, token in tokens.items():
-        a = comtab[comtab.comments == token]
-        blk_id = a.blk_id.astype(int)
-        date_time = a.date_time
-        for blk, dtm in zip(blk_id,date_time):
-
-            fn_root ='{}_blk{}_{}_T{}'.format(os.path.splitext(fn_base)[0], blk+1, tokid, dtm.strftime('%H%M%S'))
-            path_out = os.path.join(path, fn_root)
-
-            if not os.path.isdir(path_out):
-                os.mkdir(path_out)
-            print('export blk  ' + fn_root + '.mat' + '...')
-            ad.export_block(blk-1, filename = os.path.join(path_out, fn_root+'.mat'))
-
-            ''' copy pin file if available '''
-            fn_pin = os.path.splitext(fn_base)[0] +'.pin'
-            if os.path.join(path, fn_pin):
-                print('coping pin ' + fn_pin + '...')
-                copyfile(os.path.join(path, fn_pin), os.path.join(path_out, fn_root+'.pin'))
-
-    ad.export_comments_table()
     print('adichtmat export by token for ' + fn_base + ' done.')
 
 
