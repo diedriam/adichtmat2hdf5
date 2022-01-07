@@ -9,6 +9,7 @@
 
 import adichtmat
 import os
+import sys
 from shutil import copyfile
 
 
@@ -65,18 +66,21 @@ def adichtmat_export_blocks_by_token(filename, token_id = '', token_longid='', t
                 longid_blk = row.blk_id-1 # we use blk = blk_id -1 counting from 0
                 longid_dtm = row.date_time
 
-                """"search for closest start token before the longid""" 
-                a = ad.find_comment(token_start, longid_blk, to_tick_pos = longid_tick, searchmode = 'startswith')
-                if not a.empty:
-                    start_tick = a.tick_pos.iloc[-1]
-                else: 
-                    start_tick = 0    
+                """"search for closest start token before the longid"""
+
+                start_tick = 0    
+                if len(token_start) > 0:
+                    a = ad.find_comment(token_start, longid_blk, to_tick_pos = longid_tick, searchmode = 'startswith')
+                    if not a.empty:
+                        start_tick = a.tick_pos.iloc[-1]
+                    
+                
                 """search for closest stop token after the longid"""
-                b = ad.find_comment(token_stop, longid_blk, from_tick_pos = start_tick, searchmode = 'startswith')
-                if not b.empty:
-                    stop_tick = b.tick_pos.iloc[0]
-                else:
-                    stop_tick = -1    
+                stop_tick = -1   
+                if len(token_stop) > 0:
+                    b = ad.find_comment(token_stop, longid_blk, from_tick_pos = start_tick, searchmode = 'startswith')
+                    if not b.empty:
+                        stop_tick = b.tick_pos.iloc[0]
             
                 fn_root ='{}_blk{}_{}_T{}'.format(os.path.splitext(fn_base)[0], longid_blk+1, id, longid_dtm.strftime('%H%M%S'))
                 path_out = os.path.join(path, fn_root)
@@ -96,16 +100,22 @@ def adichtmat_export_blocks_by_token(filename, token_id = '', token_longid='', t
 
 
 def main():
-    filename = '/Users/diedriam/DATA/DATA_Local/tmp/TomM/2021-12-14_080000_TomM_AD059P_Day0_tilt.mat'
-    adichtmat_export_blocks_by_token(filename)
-
-    #if len(sys.argv) > 1:
-    #    adichtmat_export_blocks_by_token(sys.argv[1])
-    #    if len(sys.argv) == 4:
-    #        adichtmat_export_blocks_by_token(sys.argv[1], sys.argv[2], sys.argv[3])
-    #else:
-    #    print('adichtmat_export_blocks_by_token: missing argument filename')
-
+ 
+    if len(sys.argv) > 1:
+        argcount = len(sys.argv)
+        print(argcount)
+        if argcount == 2:
+            adichtmat_export_blocks_by_token(sys.argv[1])
+        if len(sys.argv) == 4:
+            adichtmat_export_blocks_by_token(sys.argv[1], sys.argv[2], sys.argv[3])
+        if len(sys.argv) == 6:
+            adichtmat_export_blocks_by_token(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+    else:
+        print('adichtmat_export_blocks_by_token: missing argument filename')
+        print('running in test ...')
+        filename = '/Users/diedriam/DATA/DATA_Local/tmp/TomM/2021-12-14_080000_TomM_AD059P_Day0_tilt.mat'
+        adichtmat_export_blocks_by_token(filename, token_id = 'VM', token_longid='@Valsalva Maneuver')
+   
 
 if __name__ == "__main__":
     main()
