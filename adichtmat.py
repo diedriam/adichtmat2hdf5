@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 
-class adichtmatfile(object):
+class Adichtmatfile(object):
 
     def __init__(self, filename):
         self.filename = filename
@@ -27,6 +27,7 @@ class adichtmatfile(object):
         self.flg_loaded_data = False
 
     def loadmat(self):
+
         fn_in = os.path.basename(self.filename)
         print('loading adicht matlab file ' + fn_in + ' ... ')
         self.mat_contents = hdf5storage.loadmat(self.filename)

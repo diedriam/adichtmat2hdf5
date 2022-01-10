@@ -1,0 +1,20 @@
+files:
+  testfile: 2021-12-14_080000_TomM_AD059P_Day0_tilt.mat
+
+paths:
+  log: ./log
+  data: ~/DATA/DATA_Local/tmp/TomM/
+
+params:
+
+tokens:
+    'VM': ['@Valsalva Maneuver','[BLK_VM','VM_BLK]'],
+    'NB': ['@Normal Breathing', '[BLK_NB','NB_BLK]'],
+    'NS010': ['@Necksuction 0.1 Hz', '[BLK_NS010','NS010_BLK]'],
+    'NSRND': ['@Randomized Neck Suction', '[BLK_NSRND','NSRND_BLK]'],
+    'CB010': ['@Controlled Breathing 0.1 Hz', '[BLK_CB010','CB010_BLK]'],
+    'CB025': ['@Controlled Breathing 0.25 Hz', '[BLK_CB025','CB025_BLK]'],
+    'HV': ['@Hyperventilation', '[BLK_HV','HV_BLK]'],
+    'BH': ['@Breathhold', '[BLK_BH','BH_BLK]'],
+    'TT': ['@HUT15', '[BLK_TILT','TILT_BLK]'],
+
