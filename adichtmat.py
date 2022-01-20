@@ -511,7 +511,7 @@ class Adichtmatfile(object):
         # indx = [slice( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart, dataend)]
         # matblockdata[u'data']  = self.data['data'][0][indx]
 
-        matblockdata[u'data'] = [self.data['data'][0][istart[0] - 1:iend[0]] for istart, iend in
+        matblockdata[u'data'] = [self.data['data'][0][istart[0] - 1:iend[0]]-1 for istart, iend in
                                  zip(datastart2.astype(int), dataend2.astype(int))]
         # hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
         #                  format='7.3')
@@ -594,8 +594,8 @@ class Adichtmatfile(object):
             print('error: smaller start_tick or stop_tick out of range')
             return
 
+        '''calculate start end of selcted interval in original data '''
         datastart2 = self.mat_contents['datastart'][:, blk].reshape(-1, 1) + sel_offset_smp
-
         datastart2 = datastart2.flatten()
         dataend2 = datastart2 + sel_len_smp.flatten()
 
@@ -662,21 +662,33 @@ class Adichtmatfile(object):
         # indx = [indx, slice(datastart[ind, 0].astype(int) - 1, dataend[ind, 0].astype(int))]
         # indx = [slice( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart, dataend)]
        
-        slices = [slice( istart.astype(int)-1, iend.astype(int)) for (istart , iend) in zip(datastart2, dataend2)]
-        data3 = (self.data['data'][0][s] for s in slices)
+        # slices = [slice( istart.astype(int)-1, iend.astype(int)-1) for (istart , iend) in zip(datastart2, dataend2)]
+        # data3 = (self.data['data'][0][s] for s in slices)
         # does not work matblockdata[u'data']  = self.data['data'][0][slices]  
 
         # ranges = [range( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart2, dataend2)]
         # does not work matblockdata[u'data']  = self.data['data'][0][ranges]  
 
-
+       
         ind = 0
         istart = datastart2.astype(int)-1
         iend = dataend2.astype(int)-1
-        data=self.data['data'][0][istart[0]:iend[0]]
+         # remember a slice "0:n" selects data[0]...data[n-1]
+        data=self.data['data'][0][istart[0]:iend[0]+1]
+        
+        datastart4 = datastart2
+        dataend4  = dataend2
+        datastart4[0] = 1
+        dataend4[0] = sel_len_smp[0] + 1
         for ind in range(1,len(istart)):
-            data = np.concatenate((data, self.data['data'][0][istart[ind]:iend[ind]]))
+            # remember a slice "0:n" selects data[0]...data[n-1]
+            data = np.concatenate((data, self.data['data'][0][istart[ind]:iend[ind]+1]))
+            datastart4[ind]=dataend4[ind-1]+1
+            dataend4[ind] = datastart4[ind] + sel_len_smp[ind]
         matblockdata[u'data'] = data
+        matblockdata[u'datastart'] = datastart4.reshape(-1, 1)
+        matblockdata[u'dataend'] = dataend4.reshape(-1, 1)
+       
 
         #following lines generate a cell array which is nice but Matlab can't mempap and index this variable
         #matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
