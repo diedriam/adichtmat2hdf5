@@ -84,7 +84,7 @@ def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_st
                 if not os.path.isdir(path_out):
                     os.mkdir(path_out)
                 print('export blk  ' + fn_root + '.mat' + '...')
-                ad.export_block3(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
+                ad.export_block2(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
             
                 ''' copy pin file if available '''
                 fn_pin = os.path.splitext(fn_base)[0] +'.pin'
