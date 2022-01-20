@@ -126,9 +126,9 @@ def main():
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         from_path = os.path.join(Path.home(),'tmp')
-        #batch_adichtmat_export_blocks_bytok2(from_path = from_path)
-        fn='/Users/diedriam/tmp/AD003H_DemT/2019-10-30_092700_AD003H_DemT_Day0.mat'
-        adichtmat_export_blocks_by_tok2(fn,'NB','@Normal Breathing', '[BLK_NB','BLK_NB]')
+        batch_adichtmat_export_blocks_bytok2(from_path = from_path)
+        #fn='/Users/diedriam/tmp/AD003H_DemT/2019-10-30_092700_AD003H_DemT_Day0.mat'
+        #adichtmat_export_blocks_by_tok2(fn,'NB','@Normal Breathing', '[BLK_NB','BLK_NB]')
 if __name__ == "__main__":
     main()
 
