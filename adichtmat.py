@@ -277,7 +277,7 @@ class Adichtmatfile(object):
         print('export comments table done.')
 
 
-    def export_block(self, blk=0, filename=''):
+    def export_block_obsolete_1(self, blk=0, filename=''):
         # blk is block number counting from 0, blk = blk_id -1
         blocktimes = self.mat_contents['blocktimes'][0][blk]
         datastart = self.mat_contents.get('datastart', [])
@@ -382,7 +382,7 @@ class Adichtmatfile(object):
         print('export interval done.')
         return 1
 
-    def export_block2(self, blk=0, start_tick=0, stop_tick=-1, filename=''):
+    def export_block_obsolete_2(self, blk=0, start_tick=0, stop_tick=-1, filename=''):
         # blk is block number counting from 0, blk = blk_id -1
         blkcount = self.get_blockcount()
         if (blk < 0) | (blk >= self.get_blockcount()):
@@ -523,7 +523,7 @@ class Adichtmatfile(object):
         return 1
 
 
-    def export_block3(self, blk = 0, start_tick=0, stop_tick=-1, filename=''):
+    def export_block2(self, blk = 0, start_tick=0, stop_tick=-1, filename=''):
         # blk is block number counting from 0, blk = blk_id -1
         
         if not self.flg_loaded_info:
