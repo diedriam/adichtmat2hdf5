@@ -94,15 +94,21 @@ class Adichtmatfile(object):
         return clean_txt
 
     def get_blockcount(self):
-        return len(self.mat_contents['blocktimes'][0, :])
+        
+        if type(self.mat_contents['blocktimes']) == np.float64:
+            return 1
+        else:    
+            return len(self.mat_contents['blocktimes'][0, :])
 
     def get_blocktimes(self, *indx):
         if not indx:
             indx = range(0, self.get_blockcount())
 
         # convert mat datenum to python datetime
-        datenums = self.mat_contents['blocktimes'][0, indx]
-        blocktimes = [self.datenum_to_datetime(item) for item in datenums]
+        blocktimes = []
+        if len(self.mat_contents):
+            datenums = self.mat_contents['blocktimes'][0, indx]
+            blocktimes = [self.datenum_to_datetime(item) for item in datenums]
         return blocktimes
 
     def get_firstsampleoffset(self, *indx, blk = 0):
@@ -221,6 +227,8 @@ class Adichtmatfile(object):
         type_id = comtab[:, 3].astype(np.int64)
         text_id = comtab[:, 4].astype(np.int64)
 
+        if type(comtext[0]) == np.ndarray:
+            comtext=comtext[:,0]
         comments = [comtext[id - 1].strip() for id in text_id]
 
         block_times = self.get_blocktimes()
