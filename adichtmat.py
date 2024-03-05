@@ -1,14 +1,3 @@
-# library to handle labchart export matfiles
-# labchart export matfiles are saved in older matlab format
-# which is limited in size for import into Matlab
-# export block converts into newer matlab 4.7  hdf format
-# it allows to import bigger files into Matlab
-#
-# by Andre Diedrich
-# created 2021-03-12
-# last modified 2021-05-23
-
-
 import hdf5storage
 import os
 import datetime as dt
@@ -94,7 +83,6 @@ class Adichtmatfile(object):
         return clean_txt
 
     def get_blockcount(self):
-        
         if type(self.mat_contents['blocktimes']) == np.float64:
             return 1
         else:    
@@ -137,15 +125,19 @@ class Adichtmatfile(object):
             values = self.mat_contents['dataend'][:, blk] - self.mat_contents['datastart'][:, blk] + 1
         else:
             values = self.mat_contents['dataend'][indx, blk] - self.mat_contents['datastart'][indx, blk] + 1
-
         return values
 
     def get_datalen_sec(self, *indx, blk = 0):
         if not indx:
-            values = self.get_datalen_smp(blk = blk) / self.get_samplerates(blk = blk)
+            fs = self.get_samplerates(blk = blk)
+            smp = self.get_datalen_smp(blk = blk)
         else:
-            values = self.get_datalen_smp(indx, blk = blk) / self.get_samplerates(indx, blk = blk)
-        return values
+            fs = self.get_samplerates(indx, blk = blk)
+            smp = values = self.get_datalen_smp(indx, blk = blk)
+
+        len_sec = [x/y if y !=0 else 0 for x,y in zip (smp, fs) ]
+        
+        return len_sec
 
     def get_datalen_ticks(self, *indx, blk = 0) -> np.int64:
         if not indx:
@@ -201,7 +193,6 @@ class Adichtmatfile(object):
             unittextmap = self.mat_contents['unittextmap'][indx, blk]
 
         unittext = self.mat_contents['unittext'][unittextmap.astype(np.int64) - 1]
-
         return unittext
 
     def print_signames(self):
@@ -279,11 +270,10 @@ class Adichtmatfile(object):
         df = self.get_comments_table(format='long')
         path = os.path.dirname(self.filename)
         fn_out = os.path.basename(self.filename)
-        fn_out = '{}.xlsx'.format(os.path.join(path, os.path.splitext(fn_out)[0]))
-        print('export comments table {}...'.format(fn_out))
+        fn_out = f'{os.path.join(path, os.path.splitext(fn_out)[0])}_comments.xlsx'
+        print(f'export comments table {fn_out}...')
         df.to_excel(fn_out, index=False)
         print('export comments table done.')
-
 
 
     def export_block2(self, blk = 0, start_tick=0, stop_tick=-1, filename=''):
@@ -507,6 +497,6 @@ class Adichtmatfile(object):
         self.mat_contents['unittext'] = np.array(self.mat_contents['unittext'], dtype="object").reshape(-1, 1)
         self.mat_contents['comtext'] = np.array(self.mat_contents['comtext'], dtype="object").reshape(-1, 1)
 
-        print('saving as hdf5 matlab file ' + fn_out + ' ...')
+        print(f'saving as hdf5 matlab file {fn_out}...')
         hdf5storage.write(self.mat_contents, '.', os.path.join(path, fn_out), matlab_compatible=True, format='7.3')
         print('save hdf5 done.')
