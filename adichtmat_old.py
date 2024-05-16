@@ -61,7 +61,7 @@ class Adichtmatfile(object):
             self.data = hdf5storage.loadmat(self.filename, variable_names='data')
             print('loading adicht matlab data ' + fn_in + ' done. ')
             self.flg_loaded_data = True
-            
+
     @staticmethod
     def datenum_to_datetime(datenum):
         """
@@ -76,9 +76,9 @@ class Adichtmatfile(object):
     @staticmethod
     def strip_nparray_txt(nparray_txt):
         if nparray_txt.ndim > 0:
-            clean_txt = [str.strip(txt[0]) for txt in nparray_txt]
+            clean_txt = [txt.strip() for txt in nparray_txt]
         else:
-            clean_txt = [str.strip(nparray_txt)]
+            clean_txt = [nparray_txt.strip()]
         return clean_txt
 
     def get_blockcount(self):
@@ -87,7 +87,7 @@ class Adichtmatfile(object):
         else:    
             return len(self.mat_contents['blocktimes'][0, :])
 
-    def get_blocktimes(self, indx):
+    def get_blocktimes(self, *indx):
         if not indx:
             indx = range(0, self.get_blockcount())
 
@@ -98,35 +98,35 @@ class Adichtmatfile(object):
             blocktimes = [self.datenum_to_datetime(item) for item in datenums]
         return blocktimes
 
-    def get_firstsampleoffset(self, indx, blk = 0):
+    def get_firstsampleoffset(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['firstsampleoffset'][:, blk]
         else:
             values = self.mat_contents['firstsanpleoffset'][indx, blk]
         return values
 
-    def get_datastart(self, indx, blk = 0):
+    def get_datastart(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['datastart'][:, blk]
         else:
             values = self.mat_contents['datastart'][indx, blk]
-        return values.astype(np.int64)-1
+        return values.astype(np.int64)
 
-    def get_dataend(self, indx, blk = 0):
+    def get_dataend(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk]
         else:
             values = self.mat_contents['dataend'][indx, blk]
-        return values.astype(np.int64)-1
+        return values.astype(np.int64)
 
-    def get_datalen_smp(self, indx, blk = 0):
+    def get_datalen_smp(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk] - self.mat_contents['datastart'][:, blk] + 1
         else:
             values = self.mat_contents['dataend'][indx, blk] - self.mat_contents['datastart'][indx, blk] + 1
         return values
 
-    def get_datalen_sec(self, indx, blk = 0):
+    def get_datalen_sec(self, *indx, blk = 0):
         if not indx:
             fs = self.get_samplerates(blk = blk)
             smp = self.get_datalen_smp(blk = blk)
@@ -138,28 +138,28 @@ class Adichtmatfile(object):
         
         return len_sec
 
-    def get_datalen_ticks(self, indx, blk = 0) -> np.int64:
+    def get_datalen_ticks(self, *indx, blk = 0) -> np.int64:
         if not indx:
             values = self.get_datalen_sec(blk = blk) * self.get_tickrates(blk)
         else:
             values = self.get_datalen_sec(indx, blk = blk) * self.get_tickrates(blk)
         return values
 
-    def get_rangemax(self, indx, blk = 0):
+    def get_rangemax(self, *indx, blk = 0):
         if not indx:
             values = self.mat_contents['rangemax'][:, blk]
         else:
             values = self.mat_contents['rangemax'][indx, blk]
         return values.astype(np.float64)
 
-    def get_rangemin(self, indx, blk=0):
+    def get_rangemin(self, *indx, blk=0):
         if not indx:
             values = self.mat_contents['rangemin'][:, blk]
         else:
             values = self.mat_contents['rangemin'][indx, blk]
         return values.astype(np.float64)
 
-    def get_tickrates(self, blk):
+    def get_tickrates(self, *blk):
         # blk is block number counting from 0...
         if not blk:
             values = self.mat_contents['tickrate'][0, :]
@@ -167,7 +167,7 @@ class Adichtmatfile(object):
             values = self.mat_contents['tickrate'][0, blk]
         return values.astype(np.float64)
 
-    def get_samplerates(self, indx, blk=0):
+    def get_samplerates(self, *indx, blk=0):
         if not indx:
             values = self.mat_contents['samplerate'][:, blk]
         else:
@@ -178,13 +178,14 @@ class Adichtmatfile(object):
         count = len(self.mat_contents['titles'])
         return count
 
-    def get_signames(self, indx):
-        signames = self.mat_contents['titles']
-        if indx: 
-            signames = signames[indx]
+    def get_signames(self, *indx):
+        if not indx:
+            signames = self.mat_contents['titles']
+        else:
+            signames = self.mat_contents['titles'][indx]
         return signames
 
-    def get_sigunits(self, indx, blk=0):
+    def get_sigunits(self, *indx, blk=0):
         if not indx:
             unittextmap = self.mat_contents['unittextmap'][:, blk]
         else:
@@ -192,20 +193,6 @@ class Adichtmatfile(object):
 
         unittext = self.mat_contents['unittext'][unittextmap.astype(np.int64) - 1]
         return unittext
-    
-    # this should go into datarecord class
-    def get_sigdata(self, s, blk = 0, start = None, stop = None, step= 1):
-        datastart = self.get_datastart(s, blk = blk)
-        
-        if start:
-            datastart += start
-        if stop:
-            datastop = datastart + stop
-        else:
-            datastop = self.get_dataend(s, blk = blk)
-             
-        return self.mat_contents['data'][slice(datastart,datastop, step)]       
-   
 
     def print_signames(self):
         signame = self.get_signames()
