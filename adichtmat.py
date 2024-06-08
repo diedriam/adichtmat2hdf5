@@ -87,7 +87,7 @@ class Adichtmatfile(object):
         else:    
             return len(self.mat_contents['blocktimes'][0, :])
 
-    def get_blocktimes(self, indx):
+    def get_blocktimes(self, indx = None):
         if not indx:
             indx = range(0, self.get_blockcount())
 
@@ -98,54 +98,53 @@ class Adichtmatfile(object):
             blocktimes = [self.datenum_to_datetime(item) for item in datenums]
         return blocktimes
 
-    def get_firstsampleoffset(self, indx, blk = 0):
+    def get_firstsampleoffset(self, indx = None, blk = 0):
         if not indx:
             values = self.mat_contents['firstsampleoffset'][:, blk]
         else:
             values = self.mat_contents['firstsanpleoffset'][indx, blk]
         return values
 
-    def get_datastart(self, indx, blk = 0):
+    def get_datastart(self, indx = None, blk = 0):
         if not indx:
             values = self.mat_contents['datastart'][:, blk]
         else:
             values = self.mat_contents['datastart'][indx, blk]
         return values.astype(np.int64)-1
 
-    def get_dataend(self, indx, blk = 0):
+    def get_dataend(self, indx = None, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk]
         else:
             values = self.mat_contents['dataend'][indx, blk]
         return values.astype(np.int64)-1
 
-    def get_datalen_smp(self, indx, blk = 0):
+    def get_datalen_smp(self, indx = None, blk = 0):
         if not indx:
             values = self.mat_contents['dataend'][:, blk] - self.mat_contents['datastart'][:, blk] + 1
         else:
             values = self.mat_contents['dataend'][indx, blk] - self.mat_contents['datastart'][indx, blk] + 1
         return values
 
-    def get_datalen_sec(self, indx, blk = 0):
+    def get_datalen_sec(self, indx = None, blk = 0)->np.int64:
         if not indx:
-            fs = self.get_samplerates(blk = blk)
-            smp = self.get_datalen_smp(blk = blk)
+            fs = self.get_samplerates(indx = indx, blk = blk)
+            smp = self.get_datalen_smp(indx = indx, blk = blk)
         else:
-            fs = self.get_samplerates(indx, blk = blk)
-            smp = values = self.get_datalen_smp(indx, blk = blk)
+            fs = self.get_samplerates(indx = indx, blk = blk)
+            smp = values = self.get_datalen_smp(ind = indx, blk = blk)
 
         len_sec = [x/y if y !=0 else 0 for x,y in zip (smp, fs) ]
         
         return len_sec
 
-    def get_datalen_ticks(self, indx, blk = 0) -> np.int64:
-        if not indx:
-            values = self.get_datalen_sec(blk = blk) * self.get_tickrates(blk)
-        else:
-            values = self.get_datalen_sec(indx, blk = blk) * self.get_tickrates(blk)
+    def get_datalen_ticks(self, indx = None, blk = 0) ->np.int64:
+        val1 = self.get_datalen_sec(indx = indx, blk = blk)
+        val2 = self.get_tickrates(blk = blk)
+        values = [val*val2 for val in val1]      
         return values
 
-    def get_rangemax(self, indx, blk = 0):
+    def get_rangemax(self, indx = None, blk = 0):
         if not indx:
             values = self.mat_contents['rangemax'][:, blk]
         else:
@@ -159,7 +158,7 @@ class Adichtmatfile(object):
             values = self.mat_contents['rangemin'][indx, blk]
         return values.astype(np.float64)
 
-    def get_tickrates(self, blk):
+    def get_tickrates(self, blk = None):
         # blk is block number counting from 0...
         if not blk:
             values = self.mat_contents['tickrate'][0, :]
@@ -167,7 +166,7 @@ class Adichtmatfile(object):
             values = self.mat_contents['tickrate'][0, blk]
         return values.astype(np.float64)
 
-    def get_samplerates(self, indx, blk=0):
+    def get_samplerates(self, indx = None, blk=0):
         if not indx:
             values = self.mat_contents['samplerate'][:, blk]
         else:
@@ -178,13 +177,13 @@ class Adichtmatfile(object):
         count = len(self.mat_contents['titles'])
         return count
 
-    def get_signames(self, indx):
+    def get_signames(self, indx = None):
         signames = self.mat_contents['titles']
         if indx: 
             signames = signames[indx]
         return signames
 
-    def get_sigunits(self, indx, blk=0):
+    def get_sigunits(self, indx = None, blk=0):
         if not indx:
             unittextmap = self.mat_contents['unittextmap'][:, blk]
         else:
