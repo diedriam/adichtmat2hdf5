@@ -110,14 +110,15 @@ def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_st
 
     print(f"adichtmat export by tok for {fn_base} done.")
 
-def batch_adichtmat_export_blocks_bytok2(from_path =''):
+def batch_adichtmat_export_blocks_by_tok2(from_path =''):
     ext = '*.mat'
     file_list = list(Path(from_path).glob('**/' + ext))
 
     print(f"running batch adichmat export blocks in {from_path}...") 
-    for file in file_list:       
-        print(f"processing file {file}...")
-        adichtmat_export_blocks_by_tok2(str(file)) 
+    for file in file_list: 
+        if not (file.name.startswith(".") or str(file.parent).find('cuts') > 0): 
+            print(f"processing file {file}...")
+            adichtmat_export_blocks_by_tok2(str(file)) 
 
     return 
     print('batch done.') 
@@ -130,9 +131,9 @@ def adichtmat_export():
             print(filename)
             
             if os.path.isfile(filename):
-               adichtmat_export_blocks_by_tok2(filename)     
+               adichtmat_export_blocks_by_tok2(str(filename))     
             else:
-                batch_adichtmat_export_blocks_bytok2(from_path = filename)
+                batch_adichtmat_export_blocks_by_tok2(from_path = filename)
                    
         if len(sys.argv) == 4:
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3])
@@ -140,7 +141,8 @@ def adichtmat_export():
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         from_path = os.path.join(Path.home(),'tmp')
-        batch_adichtmat_export_blocks_bytok2(from_path = from_path)
+        from_path = '/Volumes/AD3/AutoDet_Data_Analysis/AutoDet1/by_test/NSRND/day0/POTS_F/AD071P_HunB/2022-08-09_080000_HunB_AD071P_Day0_tilt_blk29_NSRND_T121245/2022-08-09_080000_HunB_AD071P_Day0_tilt_blk29_NSRND_T121245.mat'
+        batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
     
 
 def main():

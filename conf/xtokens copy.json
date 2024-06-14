@@ -6,7 +6,6 @@
         "tok_stop"   : "BLK_VM]"
     },
     {
-        
         "tok_id"    : "NB",
         "tok_longid": "@Normal Breathing",
         "tok_start" : "[BLK_NB",
@@ -17,6 +16,12 @@
         "tok_longid": "@Necksuction 0.1 Hz",
         "tok_start" : "[BLK_NS010",
         "tok_stop"   : "BLK_NS010]"
+    },
+    {
+        "tok_id"    : "NSRND",
+        "tok_longid": "@Randomized Neck Suction",
+        "tok_start" : "[BLK_NSRND",
+        "tok_stop"   : "BLK_NSRND]"
     },
     {
         "tok_id"    : "CB010",
@@ -43,10 +48,9 @@
         "tok_stop"   : "BLK_BH]"
     },
     {
-    "tok_id"    : "TT",
-    "tok_longid": "@HUT15",
-    "tok_start" : "[BLK_TT",
-    "tok_stop"   : "BLK_TT]"
+        "tok_id"    : "TT",
+        "tok_longid": "@HUT15",
+        "tok_start" : "[BLK_TT",
+        "tok_stop"   : "BLK_TT]"
     }
-    
 ]
