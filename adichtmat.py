@@ -127,15 +127,9 @@ class Adichtmatfile(object):
         return values
 
     def get_datalen_sec(self, indx = None, blk = 0)->np.int64:
-        if not indx:
-            fs = self.get_samplerates(indx = indx, blk = blk)
-            smp = self.get_datalen_smp(indx = indx, blk = blk)
-        else:
-            fs = self.get_samplerates(indx = indx, blk = blk)
-            smp = values = self.get_datalen_smp(ind = indx, blk = blk)
-
+        fs = self.get_samplerates(indx = indx, blk = blk)
+        smp = self.get_datalen_smp(indx = indx, blk = blk)
         len_sec = [x/y if y !=0 else 0 for x,y in zip (smp, fs) ]
-        
         return len_sec
 
     def get_datalen_ticks(self, indx = None, blk = 0) ->np.int64:

@@ -5,7 +5,7 @@
 #
 # by Andre Diedrich
 # created 2021-03-12
-# last modified 2021-11-23
+# last modified 2024-06-21
 
 from adichtmat import Adichtmatfile
 from xtokens import Xtoken, Xtokenset   
@@ -141,7 +141,9 @@ def adichtmat_export():
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         from_path = os.path.join(Path.home(),'tmp')
-        batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
+        from_path = '/Volumes/AD3/AutoDet_Data_Analysis/AutoDet1/by_patient/CONT_F/AD004H_AndK/2019-11-21_090000_AndK_AD004H_Day0_tilt/2019-11-21_090000_AndK_AD004H_Day0_tilt_p1.mat'
+        # batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
+        adichtmat_export_blocks_by_tok2(from_path)
     
 
 def main():
