@@ -141,7 +141,6 @@ def adichtmat_export():
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         from_path = os.path.join(Path.home(),'tmp')
-        from_path = '/Volumes/AD3/AutoDet_Data_Analysis/AutoDet1/by_test/NSRND/day0/POTS_F/AD071P_HunB/2022-08-09_080000_HunB_AD071P_Day0_tilt_blk29_NSRND_T121245/2022-08-09_080000_HunB_AD071P_Day0_tilt_blk29_NSRND_T121245.mat'
         batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
     
 
