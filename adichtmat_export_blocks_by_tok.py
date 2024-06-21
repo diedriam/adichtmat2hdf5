@@ -14,13 +14,13 @@ import sys
 from pathlib import Path
 from shutil import copyfile
 
-def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_start='', tok_stop=''):
+def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_start='', tok_stop='', xtoken_def = "./conf/xtokens.json"):
     """ export block identified by tok_longid and interval defined by tok_start and tok_stop """
 
     if len(tok_id) > 0 & (len(tok_longid) > 0):
         tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
     else:
-        xtokenset = Xtokenset()
+        xtokenset = Xtokenset(filename = xtoken_def)
         xtokenset.load()
         tokens = xtokenset.xtokens
     
