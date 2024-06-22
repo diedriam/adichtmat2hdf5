@@ -133,9 +133,9 @@ class Adichtmatfile(object):
         return len_sec
 
     def get_datalen_ticks(self, indx = None, blk = 0) ->np.int64:
-        val1 = self.get_datalen_sec(indx = indx, blk = blk)
-        val2 = self.get_tickrates(blk = blk)
-        values = [val*val2 for val in val1]      
+        len_sec = self.get_datalen_sec(indx = indx, blk = blk)
+        tickrate = self.get_tickrates(blk)
+        values = [val*tickrate for val in len_sec]      
         return values
 
     def get_rangemax(self, indx = None, blk = 0):
@@ -152,9 +152,9 @@ class Adichtmatfile(object):
             values = self.mat_contents['rangemin'][indx, blk]
         return values.astype(np.float64)
 
-    def get_tickrates(self, blk = None):
+    def get_tickrates(self, blk = -1):
         # blk is block number counting from 0...
-        if not blk:
+        if blk == -1:
             values = self.mat_contents['tickrate'][0, :]
         else:
             values = self.mat_contents['tickrate'][0, blk]
