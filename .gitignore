@@ -1,3 +1,14 @@
 .vsstudio
+*.log
+*.pyc
+__pycache__/
 *.mat
-__pycache__
+local_settings.py
+db.sqlite3
+media
+
+### macOS ###
+*.DS_Store
+.AppleDouble
+.LSOverride
+
