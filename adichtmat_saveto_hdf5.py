@@ -13,7 +13,7 @@ import adichtmat
 
 def adichtmat_saveto_hdf5(filename):
 
-    ad = adichtmat.adichtmatfile(filename)
+    ad = ad = adichtmat.Adichtmatfile(filename)
     ad.loadmat()
     ad.save_to_hdf5()
 

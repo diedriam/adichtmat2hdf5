@@ -12,7 +12,7 @@ import sys, getopt
 import adichtmat
 
 def adichtmat_export_comments(filename):
-    ad = adichtmat.adichtmatfile(filename)
+    ad = adichtmat.Adichtmatfile(filename)
     ad.loadmat()
     ad.export_comments_table()
 
