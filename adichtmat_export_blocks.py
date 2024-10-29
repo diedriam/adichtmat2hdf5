@@ -14,7 +14,7 @@ import adichtmat
 
 def adichtmat_export_blocks(filename):
 
-    ad = adichtmat.Adichtmatfile(filename)
+    ad = adichtmat.adichtmatfile(filename)
     ad.loadmat()
 
     nblk = ad.get_blockcount()

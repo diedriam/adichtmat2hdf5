@@ -5,23 +5,22 @@
 #
 # by Andre Diedrich
 # created 2021-03-12
-# last modified 2021-11-23
+# last modified 2024-06-21
 
-from distutils import filelist
 from adichtmat import Adichtmatfile
-from xtokens import Xtoken, Xtokenset
+from xtokens import Xtoken, Xtokenset   
 import os
 import sys
 from pathlib import Path
 from shutil import copyfile
 
-def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_start='', tok_stop=''):
-    """ export block identified by tok_longid and select interval defined by tok_start and tok_stop """
+def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_start='', tok_stop='', xtoken_def = "./conf/xtokens.json"):
+    """ export block identified by tok_longid and interval defined by tok_start and tok_stop """
 
     if len(tok_id) > 0 & (len(tok_longid) > 0):
         tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
     else:
-        xtokenset = Xtokenset()
+        xtokenset = Xtokenset(filename = xtoken_def)
         xtokenset.load()
         tokens = xtokenset.xtokens
     
@@ -35,7 +34,18 @@ def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_st
 
     """ get comtab in form of df """
     comtab = ad.get_comments_table()   
-    
+    df = ad.get_comments_table() 
+
+    """ extract NIBP """
+    df[['SBP','DBP','MBP','HR']] = df.comments.str.extract('@NIBP = (\d+) / (\d+) \((\d+)\)\, (\d+)')
+    df.drop(columns=['sig_id','type_id','text_id','tick_pos'], inplace = True)
+
+    path = os.path.dirname(ad.filename)
+    fn_out = os.path.basename(ad.filename)
+    fn_out = '{}_comments_wNIBP.xlsx'.format(os.path.join(path, os.path.splitext(fn_out)[0]))
+    print('export comments table {}...'.format(fn_out))
+    df.to_excel(fn_out, index=False)
+    print('export comments table with NIBP done.')
 
     for tok in tokens:
     
@@ -79,36 +89,41 @@ def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_st
                         stop_tick = b.tick_pos.iloc[0]
             
                 fn_root ='{}_blk{}_{}_T{}'.format(os.path.splitext(fn_base)[0], longid_blk+1, tok_id, longid_dtm.strftime('%H%M%S'))
-                path_out = os.path.join(path, fn_root)
-
+                path_out = os.path.join(path,'cuts')
                 if not os.path.isdir(path_out):
                     os.mkdir(path_out)
-                print('export blk  ' + fn_root + '.mat' + '...')
+                path_out = os.path.join(path,'cuts',fn_root)
+                if not os.path.isdir(path_out):
+                    os.mkdir(path_out)    
+                print(f"export blk {fn_root}.mat ...")
                 ad.export_block2(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
-            
+                
                 ''' copy pin file if available '''
                 fn_pin = os.path.splitext(fn_base)[0] +'.pin'
-                if os.path.join(path, fn_pin):
-                    print('coping pin ' + fn_pin + '...')
-                    copyfile(os.path.join(path, fn_pin), os.path.join(path_out, fn_root+'.pin'))
+                fnfull_pin = os.path.join(path, fn_pin)
+                if os.path.isfile(fnfull_pin):
+                    print(f"coping pin file {fn_pin} ...")
+                    copyfile(fnfull_pin, os.path.join(path_out,fn_root+'.pin'))
+                else:
+                    print(f"pin file {fn_pin} not found.")
+                        
 
-    print('adichtmat export by tok for ' + fn_base + ' done.')
+    print(f"adichtmat export by tok for {fn_base} done.")
 
-def batch_adichtmat_export_blocks_bytok2(from_path =''):
+def batch_adichtmat_export_blocks_by_tok2(from_path =''):
     ext = '*.mat'
     file_list = list(Path(from_path).glob('**/' + ext))
 
-    print(('running batch adichmat export blocks in {}...').format(from_path)) 
-    for file in file_list:       
-        print(('processing file {}...').format(file))
-        adichtmat_export_blocks_by_tok2(str(file)) 
+    print(f"running batch adichmat export blocks in {from_path}...") 
+    for file in file_list: 
+        if not (file.name.startswith(".") or str(file.parent).find('cuts') > 0): 
+            print(f"processing file {file}...")
+            adichtmat_export_blocks_by_tok2(str(file)) 
 
     return 
     print('batch done.') 
-   
 
-def main():
- 
+def adichtmat_export():
     if len(sys.argv) > 1:
         argcount = len(sys.argv)
         if argcount == 2:
@@ -116,9 +131,9 @@ def main():
             print(filename)
             
             if os.path.isfile(filename):
-               adichtmat_export_blocks_by_tok2(filename)     
+               adichtmat_export_blocks_by_tok2(str(filename))     
             else:
-                batch_adichtmat_export_blocks_bytok2(from_path = filename)
+                batch_adichtmat_export_blocks_by_tok2(from_path = filename)
                    
         if len(sys.argv) == 4:
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3])
@@ -126,9 +141,15 @@ def main():
             adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         from_path = os.path.join(Path.home(),'tmp')
-        batch_adichtmat_export_blocks_bytok2(from_path = from_path)
-        #fn='/Users/diedriam/tmp/AD003H_DemT/2019-10-30_092700_AD003H_DemT_Day0.mat'
-        #adichtmat_export_blocks_by_tok2(fn,'NB','@Normal Breathing', '[BLK_NB','BLK_NB]')
+        #from_path = '/Volumes/AD3/AutoDet_Data_Analysis/AutoDet1/by_patient/CONT_F/AD004H_AndK/2019-11-21_090000_AndK_AD004H_Day0_tilt/2019-11-21_090000_AndK_AD004H_Day0_tilt_p1.mat'
+        from_path = '/Volumes/AD3/AutoDet_Data_Analysis/AutoDet1/by_patient/CONT_F/AD004H_AndK/2019-11-21_090000_AndK_AD004H_Day0_tilt/'
+        batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
+        #adichtmat_export_blocks_by_tok2(from_path)
+    
+
+def main():
+    adichtmat_export()
+    
 if __name__ == "__main__":
     main()
 

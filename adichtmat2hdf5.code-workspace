@@ -1,7 +1,8 @@
 {
-    "folders": [
-        {
-            "path": "../autodetpots"
-        }
-    ]
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
 }
