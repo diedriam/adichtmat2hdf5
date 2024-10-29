@@ -7,7 +7,6 @@
 # created 2021-03-12
 # last modified 2024-06-21
 
-import argparse
 from adichtmat import Adichtmatfile
 from xtokens import Xtoken, Xtokenset   
 import os
@@ -15,10 +14,10 @@ import sys
 from pathlib import Path
 from shutil import copyfile
 
-def adichtmat_export_blocks_by_tok(filename, tok_id = '', tok_longid='', tok_start='', tok_stop='', xtoken_def = "./conf/xtokens.json"):
+def adichtmat_export_blocks_by_tok2(filename, tok_id = '', tok_longid='', tok_start='', tok_stop='', xtoken_def = "./conf/xtokens.json"):
     """ export block identified by tok_longid and interval defined by tok_start and tok_stop """
 
-    if tok_id & tok_longid:
+    if len(tok_id) > 0 & (len(tok_longid) > 0):
         tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
     else:
         xtokenset = Xtokenset(filename = xtoken_def)
@@ -97,7 +96,7 @@ def adichtmat_export_blocks_by_tok(filename, tok_id = '', tok_longid='', tok_sta
                 if not os.path.isdir(path_out):
                     os.mkdir(path_out)    
                 print(f"export blk {fn_root}.mat ...")
-                ad.export_block(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
+                ad.export_block2(longid_blk, start_tick = start_tick, stop_tick = stop_tick, filename = os.path.join(path_out, fn_root+'.mat'))
                 
                 ''' copy pin file if available '''
                 fn_pin = os.path.splitext(fn_base)[0] +'.pin'
@@ -111,25 +110,44 @@ def adichtmat_export_blocks_by_tok(filename, tok_id = '', tok_longid='', tok_sta
 
     print(f"adichtmat export by tok for {fn_base} done.")
 
+def batch_adichtmat_export_blocks_by_tok2(from_path =''):
+    ext = '*.mat'
+    file_list = list(Path(from_path).glob('**/' + ext))
 
+    print(f"running batch adichmat export blocks in {from_path}...") 
+    for file in file_list: 
+        if not (file.name.startswith(".") or str(file.parent).find('cuts') > 0): 
+            print(f"processing file {file}...")
+            adichtmat_export_blocks_by_tok2(str(file)) 
 
-def main(args):
-    print(args)
-    adichtmat_export_blocks_by_tok(args.filename, tok_id = args.tok_id, tok_longid = args.tok_longid, tok_start = args.tok_start, tok_stop=args.tok_stop, xtoken_def = args.xtoken_def)
-    
+    return 
+    print('batch done.') 
+
+def adichtmat_export():
+    if len(sys.argv) > 1:
+        argcount = len(sys.argv)
+        if argcount == 2:
+            filename = sys.argv[1]
+            print(filename)
+            
+            if os.path.isfile(filename):
+               adichtmat_export_blocks_by_tok2(str(filename))     
+            else:
+                batch_adichtmat_export_blocks_by_tok2(from_path = filename)
+                   
+        if len(sys.argv) == 4:
+            adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3])
+        if len(sys.argv) == 6:
+            adichtmat_export_blocks_by_tok2(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+    else:
+        from_path = os.path.join(Path.home(),'tmp')
+        batch_adichtmat_export_blocks_by_tok2(from_path = from_path)
+        
+
+def main():
+    adichtmat_export()
     
 if __name__ == "__main__":
-   
-   parser = argparse.ArgumentParser(description = "view ekf log file")
-   parser.add_argument("-f", "--filename", default=None)
-   parser.add_argument("-i", "--tok_id", default=None)
-   parser.add_argument("-l", "--tok_longid", default=None)
-   parser.add_argument("-b", "--tok_start", default=None)
-   parser.add_argument("-e", "--tok_stop", default=None)
-   parser.add_argument("-x", "--xtoken_def", default="./conf/xtokens.json")
-   args = parser.parse_args()
-   
-   main(args)
-
+    main()
 
 
