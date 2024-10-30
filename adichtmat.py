@@ -14,22 +14,12 @@ class Adichtmatfile(object):
         self.flg_loaded_info = False
         self.flg_loaded_data = False
 
-    def loadmat(self):
-
+    def loadmat(self) -> None:
         fn_in = os.path.basename(self.filename)
-        print('loading adicht matlab file ' + fn_in + ' ... ')
-        self.mat_contents = hdf5storage.loadmat(self.filename)
-        print('loading adicht matlab file ' + fn_in + ' done. ')
+        self.loadinfo()
+        self.loaddata()
 
-        # reformat txt from char array to  string array as a one char array
-        self.mat_contents[u'titles'] = self.strip_nparray_txt(self.mat_contents[u'titles'])
-        self.mat_contents[u'unittext'] = self.strip_nparray_txt(self.mat_contents[u'unittext'])
-        self.mat_contents[u'comtext'] = self.strip_nparray_txt(self.mat_contents[u'comtext'])
-
-        self.flg_loaded_info = True
-        self.flg_loaded_data = True
-
-    def loadinfo(self):
+    def loadinfo(self) -> None:
         fn_in = os.path.basename(self.filename)
         params = [
             'blocktimes',
@@ -48,46 +38,46 @@ class Adichtmatfile(object):
             'scaleunits',
             'scaleoffset',
         ]
-        if ~self.flg_loaded_info:
+        if not self.flg_loaded_info:
             print('loading adicht matlab info ' + fn_in + ' ... ')
             self.mat_contents = hdf5storage.loadmat(self.filename, variable_names=params)
             print('loading adicht matlab info ' + fn_in + ' done. ')
             self.flg_loaded_info = True
 
-    def loaddata(self):
+    def loaddata(self) -> None:
         fn_in = os.path.basename(self.filename)
-        if ~self.flg_loaded_data:
+        if not self.flg_loaded_data:
             print('loading adicht matlab data ' + fn_in + ' ... ')
             self.data = hdf5storage.loadmat(self.filename, variable_names='data')
             print('loading adicht matlab data ' + fn_in + ' done. ')
             self.flg_loaded_data = True
             
     @staticmethod
-    def datenum_to_datetime(datenum):
+    def datenum_to_datetime(datenum: np.float64) -> dt.datetime:
         """
         Convert Matlab datenum into Python datetime.
         :param datenum: Date in matlab datenum format
         :return: Datetime object corresponding to datenum.
         """
-        dayw = dt.datetime.fromordinal(int(datenum))
+        dayw = dt.datetime.fromordinal(np.int_(datenum))
         dayfrac = dt.timedelta(days=datenum % 1) - dt.timedelta(days=366)
         return dayw + dayfrac
 
     @staticmethod
-    def strip_nparray_txt(nparray_txt):
+    def strip_nparray_txt(nparray_txt: str) -> str:
         if nparray_txt.ndim > 0:
             clean_txt = [str.strip(txt[0]) for txt in nparray_txt]
         else:
             clean_txt = [str.strip(nparray_txt)]
         return clean_txt
 
-    def get_blockcount(self):
+    def get_blockcount(self) -> int:
         if type(self.mat_contents['blocktimes']) == np.float64:
             return 1
         else:    
             return len(self.mat_contents['blocktimes'][0, :])
 
-    def get_blocktimes(self, indx = None):
+    def get_blocktimes(self, indx: int = None) -> dt.datetime:
         if not indx:
             indx = range(0, self.get_blockcount())
 
@@ -98,61 +88,61 @@ class Adichtmatfile(object):
             blocktimes = [self.datenum_to_datetime(item) for item in datenums]
         return blocktimes
 
-    def get_firstsampleoffset(self, indx = None, blk = 0):
+    def get_firstsampleoffset(self, indx: np.int64 = None, blk: int = 0) -> np.int64:
         if not indx:
             values = self.mat_contents['firstsampleoffset'][:, blk]
         else:
             values = self.mat_contents['firstsanpleoffset'][indx, blk]
         return values
 
-    def get_datastart(self, indx = None, blk = 0):
+    def get_datastart(self, indx: np.int64 = None, blk: int = 0) -> np.int64:
         if not indx:
             values = self.mat_contents['datastart'][:, blk]
         else:
             values = self.mat_contents['datastart'][indx, blk]
         return values.astype(np.int64)-1
 
-    def get_dataend(self, indx = None, blk = 0):
+    def get_dataend(self, indx: np.int64 = None, blk: int = 0) -> np.int64:
         if not indx:
             values = self.mat_contents['dataend'][:, blk]
         else:
             values = self.mat_contents['dataend'][indx, blk]
         return values.astype(np.int64)-1
 
-    def get_datalen_smp(self, indx = None, blk = 0):
+    def get_datalen_smp(self, indx: np.int64 = None, blk: int = 0) -> np.int64:
         if not indx:
             values = self.mat_contents['dataend'][:, blk] - self.mat_contents['datastart'][:, blk] + 1
         else:
             values = self.mat_contents['dataend'][indx, blk] - self.mat_contents['datastart'][indx, blk] + 1
         return values
 
-    def get_datalen_sec(self, indx = None, blk = 0)->np.int64:
+    def get_datalen_sec(self, indx: np.int64 = None, blk: int = 0) -> list[np.int64]:
         fs = self.get_samplerates(indx = indx, blk = blk)
         smp = self.get_datalen_smp(indx = indx, blk = blk)
         len_sec = [x/y if y !=0 else 0 for x,y in zip (smp, fs) ]
         return len_sec
 
-    def get_datalen_ticks(self, indx = None, blk = 0) ->np.int64:
+    def get_datalen_ticks(self, indx: np.int64 = None, blk: int = 0) -> list[np.int64]:
         len_sec = self.get_datalen_sec(indx = indx, blk = blk)
         tickrate = self.get_tickrates(blk)
         values = [val*tickrate for val in len_sec]      
         return values
 
-    def get_rangemax(self, indx = None, blk = 0):
+    def get_rangemax(self, indx: np.int64 = None, blk: int = 0) -> np.float64:
         if not indx:
             values = self.mat_contents['rangemax'][:, blk]
         else:
             values = self.mat_contents['rangemax'][indx, blk]
         return values.astype(np.float64)
 
-    def get_rangemin(self, indx, blk=0):
+    def get_rangemin(self, indx: np.int64, blk: int = 0) -> np.float64:
         if not indx:
             values = self.mat_contents['rangemin'][:, blk]
         else:
             values = self.mat_contents['rangemin'][indx, blk]
         return values.astype(np.float64)
 
-    def get_tickrates(self, blk = -1):
+    def get_tickrates(self, blk: int = -1) -> np.float64:
         # blk is block number counting from 0...
         if blk == -1:
             values = self.mat_contents['tickrate'][0, :]
@@ -160,24 +150,24 @@ class Adichtmatfile(object):
             values = self.mat_contents['tickrate'][0, blk]
         return values.astype(np.float64)
 
-    def get_samplerates(self, indx = None, blk=0):
+    def get_samplerates(self, indx: int = None, blk: int = 0):
         if not indx:
             values = self.mat_contents['samplerate'][:, blk]
         else:
             values = self.mat_contents['samplerate'][indx, blk]
         return values
 
-    def get_sigcount(self):
+    def get_sigcount(self) -> int:
         count = len(self.mat_contents['titles'])
         return count
 
-    def get_signames(self, indx = None):
+    def get_signames(self, indx = None) -> str:
         signames = self.mat_contents['titles']
         if indx: 
             signames = signames[indx]
         return signames
 
-    def get_sigunits(self, indx = None, blk=0):
+    def get_sigunits(self, indx = None, blk: int = 0) -> str:
         if not indx:
             unittextmap = self.mat_contents['unittextmap'][:, blk]
         else:
@@ -187,26 +177,26 @@ class Adichtmatfile(object):
         return unittext
     
     # this should go into datarecord class
-    def get_sigdata(self, s, blk = 0, start = None, stop = None, step= 1):
-        datastart = self.get_datastart(s, blk = blk)
+    def get_sigdata(self, signalindx: int, blk: int = 0, start: np.int64  = None, stop: np.int64 = None, step: np.int64 = 1):
+        datastart = self.get_datastart(signalindx, blk = blk)
         
         if start:
             datastart += start
         if stop:
             datastop = datastart + stop
         else:
-            datastop = self.get_dataend(s, blk = blk)
+            datastop = self.get_dataend(signalindx, blk = blk)
              
-        return self.mat_contents['data'][slice(datastart,datastop, step)]       
+        return self.mat_contents['data'][slice(datastart, datastop, step)]       
    
 
-    def print_signames(self):
+    def print_signames(self) -> None:
         signame = self.get_signames()
         for i, signame in enumerate(signame):
             print("signal {}: {}".format(i + 1, signame))
 
 
-    def get_comments_table(self, blk = -1, from_tick_pos = 0, to_tick_pos = -1, format='long')-> pd.DataFrame:
+    def get_comments_table(self, blk = -1, from_tick_pos = 0, to_tick_pos = -1, format='long') -> pd.DataFrame:
         # blk is block number counting from 0, blk = blk_id -1
         # comtab: [sig_id, blk_id, tick_pos , type_id , text_id]
         # comments string = comtext[text_id]
@@ -271,7 +261,7 @@ class Adichtmatfile(object):
         return  df
 
 
-    def export_comments_table(self):
+    def export_comments_table(self) -> None:
         df = self.get_comments_table(format='long')
         path = os.path.dirname(self.filename)
         fn_out = os.path.basename(self.filename)
@@ -281,7 +271,7 @@ class Adichtmatfile(object):
         print('export comments table done.')
 
 
-    def export_block2(self, blk = 0, start_tick=0, stop_tick=-1, filename=''):
+    def export_block(self, blk: int = 0, start_tick=0, stop_tick=-1, filename='') -> None:
         # blk is block number counting from 0 -> blk = blk_id -1
         
         if not self.flg_loaded_info:
@@ -367,10 +357,9 @@ class Adichtmatfile(object):
         unittext = np.array(self.mat_contents['unittext'], dtype="object").reshape(-1, 1)
 
         if len(filename) == 0:
-            filename = self.filename
-            fn_out = os.path.basename(filename)
-            # fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk.astype(int))
-            fn_out = '{}_blk{}_hdf5.mat'.format(os.path.splitext(fn_out)[0], blk.astype(int)+1)
+            path = os.path.dirname(self.filename)
+            fn_out = os.path.basename(self.filename)
+            fn_out = f'{os.path.join(path, os.path.splitext(fn_out)[0])}_blk_{blk+1}_hdf5.mat'
         else:
             fn_out = filename
         path = os.path.dirname(fn_out)
@@ -429,10 +418,10 @@ class Adichtmatfile(object):
 
        
         ind = 0
-        istart = datastart2.astype(int)-1
-        iend = dataend2.astype(int)-1
+        istart = datastart2.astype(int)
+        iend = dataend2.astype(int)
          # remember a slice "0:n" selects data[0]...data[n-1]
-        data=self.data['data'][0][istart[0]:iend[0]+1]
+        data=self.data['data'][0][slice(istart[0],iend[0])]
         
         datastart4 = datastart2
         dataend4  = dataend2
@@ -440,7 +429,9 @@ class Adichtmatfile(object):
         dataend4[0] = sel_len_smp[0] + 1
         for ind in range(1,len(istart)):
             # remember a slice "0:n" selects data[0]...data[n-1]
-            data = np.concatenate((data, self.data['data'][0][istart[ind]:iend[ind]+1]))
+            i1 = istart[ind]
+            i2 = iend[ind]
+            data = np.concatenate((data, self.data['data'][0][slice(i1,i2)]))
             datastart4[ind]=dataend4[ind-1]+1
             dataend4[ind] = datastart4[ind] + sel_len_smp[ind]
         matblockdata[u'data'] = data
@@ -452,17 +443,15 @@ class Adichtmatfile(object):
         #matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
         #                         zip(datastart2.astype(int), dataend2.astype(int))]
        
-
-        # hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
-        #                  format='7.3')
         hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
                           format='7.3')
 
         print(os.path.join(path, fn_out))
-        print('export interval done.')
+        
+        print(f'export block {blk+1} interval data {i1} - {i2} done.')
         return 1    
 
-    def save_to_hdf5(self, filename=''):
+    def save_to_hdf5(self, filename='') -> None:
         """
         saves file in hdf5 format
         labchart export matfile are saved in older matlab format

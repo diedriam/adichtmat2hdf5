@@ -15,16 +15,21 @@ import sys
 from pathlib import Path
 from shutil import copyfile
 
-def adichtmat_export_blocks_by_tok(filename, tok_id = '', tok_longid='', tok_start='', tok_stop='', xtoken_def = "./conf/xtokens.json"):
+def adichtmat_export_blocks_by_tok(filename:str, 
+    tok_id: str = '', tok_longid:str = '', 
+    tok_start:str ='', tok_stop:str = '', 
+    xtoken_def:str = "./conf/xtokens.json"):
+
     """ export block identified by tok_longid and interval defined by tok_start and tok_stop """
 
-    if tok_id & tok_longid:
-        tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
-    else:
+    if tok_longid == "":
+        tok_longid = tok_id    
+    if tok_id == "":
         xtokenset = Xtokenset(filename = xtoken_def)
         xtokenset.load()
         tokens = xtokenset.xtokens
-    
+    else:
+        tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
     print(tokens)
 
     path = os.path.dirname(filename)
@@ -119,16 +124,14 @@ def main(args):
     
     
 if __name__ == "__main__":
-   
    parser = argparse.ArgumentParser(description = "view ekf log file")
-   parser.add_argument("-f", "--filename", default=None)
-   parser.add_argument("-i", "--tok_id", default=None)
-   parser.add_argument("-l", "--tok_longid", default=None)
-   parser.add_argument("-b", "--tok_start", default=None)
-   parser.add_argument("-e", "--tok_stop", default=None)
-   parser.add_argument("-x", "--xtoken_def", default="./conf/xtokens.json")
+   parser.add_argument("filename", type=str)
+   parser.add_argument("-i", "--tok_id", default="")
+   parser.add_argument("-l", "--tok_longid", type=str, default="")
+   parser.add_argument("-b", "--tok_start", type=str, default="")
+   parser.add_argument("-e", "--tok_stop", type=str, default="")
+   parser.add_argument("-x", "--xtoken_def", type=str, default="./conf/xtokens.json")
    args = parser.parse_args()
-   
    main(args)
 
 
