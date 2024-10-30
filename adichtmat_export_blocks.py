@@ -1,13 +1,3 @@
-# saves file in hdf5 format
-# labchart export matfile are saved in older matlab format
-# which is limited in size for import into Matlab
-# converts into newer format
-# it allows to import bigger files into Matlab
-#
-# by Andre Diedrich
-# created 2021-03-12
-# last modified 2021-05-09
-
 import argparse
 import sys
 import adichtmat

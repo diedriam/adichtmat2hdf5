@@ -8,7 +8,7 @@ class Xtoken:
     tok_id: str
     tok_longid: str
     tok_start: str
-    tok_stop: str
+    tok_end: str
 
 
 class Xtokenset(object):
@@ -24,7 +24,7 @@ class Xtokenset(object):
         self.xtokens = []
         with open(self.filename, 'r') as f:
             xtokens = json.loads(f.read())        
-            self.xtokens = [Xtoken(xtok["tok_id"], xtok["tok_longid"], xtok["tok_start"], xtok["tok_stop"]) for xtok in xtokens]
+            self.xtokens = [Xtoken(xtok["tok_id"], xtok["tok_longid"], xtok["tok_start"], xtok["tok_end"]) for xtok in xtokens]
        
     def print(self)->None:
         for xtok in self.xtokens:

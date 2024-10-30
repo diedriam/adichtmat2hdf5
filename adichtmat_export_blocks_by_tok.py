@@ -1,11 +1,17 @@
-# labchart export matfile are saved in older matlab format
-# which is limited in size for import into Matlab
-# this routine searches for identifier in records blocks
-# and if tok is found it exports the block
+# labchart export matfile are saved in older matlab format 
+# adichtmat files are limited in size to be able to import into Matlab
+# this program packet converts adichtmat files into hdf5 files 
+# which can be imported without size limit
+#
+# function adichtmat_export_blocks_by_tok
+# this routine searches for identifier (tok_id) in records blocks files
+# and if token is found it exports the block labeled with short tok_id
+# start and stop can also be defined by tok_start and tok_end
+# token can be defined in xtokens.json file
 #
 # by Andre Diedrich
 # created 2021-03-12
-# last modified 2024-06-21
+# last modified 2024-10-30
 
 import argparse
 from adichtmat import Adichtmatfile
@@ -15,12 +21,13 @@ import sys
 from pathlib import Path
 from shutil import copyfile
 
+
 def adichtmat_export_blocks_by_tok(filename:str, 
     tok_id: str = '', tok_longid:str = '', 
-    tok_start:str ='', tok_stop:str = '', 
+    tok_start:str ='', tok_end:str = '', 
     xtoken_def:str = "./conf/xtokens.json"):
 
-    """ export block identified by tok_longid and interval defined by tok_start and tok_stop """
+    """ export block identified by tok_longid and interval defined by tok_start and tok_end """
 
     if tok_longid == "":
         tok_longid = tok_id    
@@ -29,7 +36,7 @@ def adichtmat_export_blocks_by_tok(filename:str,
         xtokenset.load()
         tokens = xtokenset.xtokens
     else:
-        tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_stop)]
+        tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_end)]
     print(tokens)
 
     path = os.path.dirname(filename)
@@ -59,7 +66,7 @@ def adichtmat_export_blocks_by_tok(filename:str,
         tok_id = tok.tok_id
         tok_longid= tok.tok_longid
         tok_start = tok.tok_start
-        tok_stop = tok.tok_stop
+        tok_end = tok.tok_end
 
         
         
@@ -89,8 +96,8 @@ def adichtmat_export_blocks_by_tok(filename:str,
                 
                 """search for closest stop tok after the longid"""
                 stop_tick = -1   
-                if len(tok_stop) > 0:
-                    b = ad.find_comment(tok_stop, longid_blk, from_tick_pos = start_tick, searchmode = 'startswith')
+                if len(tok_end) > 0:
+                    b = ad.find_comment(tok_end, longid_blk, from_tick_pos = start_tick, searchmode = 'startswith')
                     if not b.empty:
                         stop_tick = b.tick_pos.iloc[0]
             
@@ -120,16 +127,17 @@ def adichtmat_export_blocks_by_tok(filename:str,
 
 def main(args):
     print(args)
-    adichtmat_export_blocks_by_tok(args.filename, tok_id = args.tok_id, tok_longid = args.tok_longid, tok_start = args.tok_start, tok_stop=args.tok_stop, xtoken_def = args.xtoken_def)
+    adichtmat_export_blocks_by_tok(args.filename, tok_id = args.tok_id, tok_longid = args.tok_longid, tok_start = args.tok_start, tok_end=args.tok_end, xtoken_def = args.xtoken_def)
     
     
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description = "view ekf log file")
-   parser.add_argument("filename", type=str)
+   #parser.add_argument("filename", type=str)
+   parser.add_argument("-f","--filename", type=str, default = '/Users/diedriam/tmp/DATA_PhysiowaveDemo/2022-09-28_080000_SubJ_Day0_tilt/2022-09-28_080000_SubJ_Day0_tilt.mat')
    parser.add_argument("-i", "--tok_id", default="")
    parser.add_argument("-l", "--tok_longid", type=str, default="")
-   parser.add_argument("-b", "--tok_start", type=str, default="")
-   parser.add_argument("-e", "--tok_stop", type=str, default="")
+   parser.add_argument("-s", "--tok_start", type=str, default="")
+   parser.add_argument("-e", "--tok_end", type=str, default="")
    parser.add_argument("-x", "--xtoken_def", type=str, default="./conf/xtokens.json")
    args = parser.parse_args()
    main(args)

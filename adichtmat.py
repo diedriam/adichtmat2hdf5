@@ -14,14 +14,15 @@ class Adichtmatfile(object):
         self.flg_loaded_info = False
         self.flg_loaded_data = False
 
-    def loadmat(self) -> None:
+    def loadmat(self) -> bool:
         fn_in = os.path.basename(self.filename)
-        self.loadinfo()
-        self.loaddata()
-
-    def loadinfo(self) -> None:
+        if self.loadinfo():
+            return self.loaddata()
+        return False
+        
+    def loadinfo(self) -> bool:
         fn_in = os.path.basename(self.filename)
-        params = [
+        params = {
             'blocktimes',
             'datastart',
             'dataend',
@@ -37,21 +38,35 @@ class Adichtmatfile(object):
             'samplerate',
             'scaleunits',
             'scaleoffset',
-        ]
+        }
         if not self.flg_loaded_info:
             print('loading adicht matlab info ' + fn_in + ' ... ')
-            self.mat_contents = hdf5storage.loadmat(self.filename, variable_names=params)
-            print('loading adicht matlab info ' + fn_in + ' done. ')
-            self.flg_loaded_info = True
+            try:
+                self.mat_contents = hdf5storage.loadmat(str(self.filename), variable_names=params)
+               
+                if not params.isdisjoint(self.mat_contents):
+                    self.flg_loaded_info = True
+                    print('loading adicht matlab info ' + fn_in + ' done.')
 
-    def loaddata(self) -> None:
+                else:
+                     print('data structure does not match adicht format in ' + fn_in +'.')        
+            except:    
+                print('loading adicht matlab info ' + fn_in + ' failed.')
+            return self.flg_loaded_info        
+
+    def loaddata(self) -> bool:
         fn_in = os.path.basename(self.filename)
         if not self.flg_loaded_data:
             print('loading adicht matlab data ' + fn_in + ' ... ')
-            self.data = hdf5storage.loadmat(self.filename, variable_names='data')
-            print('loading adicht matlab data ' + fn_in + ' done. ')
-            self.flg_loaded_data = True
-            
+            try:
+                self.data = hdf5storage.loadmat(str(self.filename), variable_names='data')
+                self.flg_loaded_data = True
+                print('loading adicht matlab data ' + fn_in + ' done.')
+            except:    
+                print('loading adicht matlab data ' + fn_in + ' failed.')
+                self.flg_loaded_data = False
+        return self.flg_loaded_data
+         
     @staticmethod
     def datenum_to_datetime(datenum: np.float64) -> dt.datetime:
         """
@@ -439,8 +454,9 @@ class Adichtmatfile(object):
         matblockdata[u'dataend'] = dataend4.reshape(-1, 1)
        
 
-        #following lines generate a cell array which is nice but Matlab can't mempap and index this variable
-        #matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
+        # following lines generate a cell array more elegantly 
+        # but Matlab can't mempap and index this variable
+        # matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
         #                         zip(datastart2.astype(int), dataend2.astype(int))]
        
         hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
@@ -490,7 +506,9 @@ class Adichtmatfile(object):
         self.mat_contents['titles'] = np.array(self.mat_contents['titles'], dtype="object").reshape(-1, 1)
         self.mat_contents['unittext'] = np.array(self.mat_contents['unittext'], dtype="object").reshape(-1, 1)
         self.mat_contents['comtext'] = np.array(self.mat_contents['comtext'], dtype="object").reshape(-1, 1)
+        self.mat_contents['data'] = self.data['data']
 
         print(f'saving as hdf5 matlab file {fn_out}...')
-        hdf5storage.write(self.mat_contents, '.', os.path.join(path, fn_out), matlab_compatible=True, format='7.3')
+        hdf5storage.write(self.mat_contents, '.', os.path.join(path, fn_out), matlab_compatible=True, format='7.3',oned_as='col')
         print('save hdf5 done.')
+
