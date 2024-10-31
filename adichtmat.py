@@ -344,18 +344,19 @@ class Adichtmatfile(object):
         # it was impossible to find a way to avoid this
         # so we transpose the np arrays instead
 
-    
-        sel_offset_sec = start_tick / tickrate
-        sel_offset_smp = sel_offset_sec * samplerate
-        sel_len_sec = (stop_tick - start_tick) / tickrate
-        sel_len_smp = samplerate * sel_len_sec
-     
         if (start_tick < 0) | (start_tick > tick_lenmax):
             print('error: start_tick out of range')
             return
         if (stop_tick < start_tick) | (stop_tick > tick_lenmax):
             print('error: smaller start_tick or stop_tick out of range')
             return
+        
+        # calculate offset and length in sec and number of samples
+        sel_offset_sec = start_tick / tickrate
+        sel_offset_smp = sel_offset_sec * samplerate
+        sel_len_sec = (stop_tick - start_tick) / tickrate
+        sel_len_smp = samplerate * sel_len_sec
+     
 
         '''calculate start end of selcted interval in original data '''
         datastart2 = self.mat_contents['datastart'][:, blk].reshape(-1, 1) + sel_offset_smp
@@ -371,6 +372,7 @@ class Adichtmatfile(object):
         unittextmap = self.mat_contents['unittextmap'][:, blk].astype(np.float64).reshape(-1, 1)
         unittext = np.array(self.mat_contents['unittext'], dtype="object").reshape(-1, 1)
 
+        # create file output
         if len(filename) == 0:
             path = os.path.dirname(self.filename)
             fn_out = os.path.basename(self.filename)
@@ -381,36 +383,36 @@ class Adichtmatfile(object):
 
         print('export {}...'.format(fn_out))
 
-        # create new dictionary for block export while keeping intact
-        matblockdata = {}
-        matblockdata[u'block_id_orig'] = blk+1
-        matblockdata[u'start_tick_orig'] = start_tick
-        matblockdata[u'stop_tick_orig'] = stop_tick
+        # create new dictionary for block export while keeping intact old
+        mat_contents_out = {}
+        mat_contents_out[u'block_id_orig'] = blk+1
+        mat_contents_out[u'start_tick_orig'] = start_tick
+        mat_contents_out[u'stop_tick_orig'] = stop_tick
 
         datastart3 = 1 + (datastart2 - datastart2[0]).astype(np.float64)
         dataend3 = (dataend2 - datastart2[0]).astype(np.float64)
 
-        matblockdata[u'blocktimes'] = blocktimes.astype(np.float64)
-        matblockdata[u'datastart'] = datastart3.reshape(-1, 1)
-        matblockdata[u'dataend'] = dataend3.reshape(-1, 1)
-        matblockdata[u'firstsampleoffset'] = firstsampleoffset.astype(np.float64)
-        matblockdata[u'titles'] = titles
-        matblockdata[u'tickrate'] = tickrate.astype(np.float64)
-        matblockdata[u'samplerate'] = samplerate.astype(np.float64)
-        matblockdata[u'rangemax'] = rangemax.astype(np.float64)
-        matblockdata[u'rangemin'] = rangemin.astype(np.float64)
-        matblockdata[u'unittextmap'] = unittextmap
-        matblockdata[u'unittext'] = unittext
-        matblockdata[u'com'] = com
-        matblockdata[u'comtext'] = comtext
+        mat_contents_out[u'blocktimes'] = blocktimes.astype(np.float64)
+        mat_contents_out[u'datastart'] = datastart3.reshape(-1, 1)
+        mat_contents_out[u'dataend'] = dataend3.reshape(-1, 1)
+        mat_contents_out[u'firstsampleoffset'] = firstsampleoffset.astype(np.float64)
+        mat_contents_out[u'titles'] = titles
+        mat_contents_out[u'tickrate'] = tickrate.astype(np.float64)
+        mat_contents_out[u'samplerate'] = samplerate.astype(np.float64)
+        mat_contents_out[u'rangemax'] = rangemax.astype(np.float64)
+        mat_contents_out[u'rangemin'] = rangemin.astype(np.float64)
+        mat_contents_out[u'unittextmap'] = unittextmap
+        mat_contents_out[u'unittext'] = unittext
+        mat_contents_out[u'com'] = com
+        mat_contents_out[u'comtext'] = comtext
 
         # check if scaleunit is present
 
         # check if scaleunit is present
         if 'scaleunits' in self.mat_contents:
-            matblockdata[u'scaleunits'] = self.mat_contents['scaleunits'][:, blk].astype(np.float64).reshape(-1,1)
+            mat_contents_out[u'scaleunits'] = self.mat_contents['scaleunits'][:, blk].astype(np.float64).reshape(-1,1)
         if 'scaleoffset' in self.mat_contents:     
-            matblockdata[u'scaleoffset'] = self.mat_contents['scaleoffset'][:, blk].astype(np.float64).reshape(-1, 1)
+            mat_contents_out[u'scaleoffset'] = self.mat_contents['scaleoffset'][:, blk].astype(np.float64).reshape(-1, 1)
 
         if not self.flg_loaded_data:
             self.loaddata()
@@ -426,19 +428,18 @@ class Adichtmatfile(object):
        
         # slices = [slice( istart.astype(int)-1, iend.astype(int)-1) for (istart , iend) in zip(datastart2, dataend2)]
         # data3 = (self.data['data'][0][s] for s in slices)
-        # does not work matblockdata[u'data']  = self.data['data'][0][slices]  
+        # does not work mat_contents_out[u'data']  = self.data['data'][0][slices]  
 
         # ranges = [range( istart.astype(int), iend.astype(int)) for (istart , iend) in zip(datastart2, dataend2)]
-        # does not work matblockdata[u'data']  = self.data['data'][0][ranges]  
+        # does not work mat_contents_out[u'data']  = self.data['data'][0][ranges]  
 
        
         ind = 0
-        # adichtmat stores istart counting from 1
-        istart = datastart2.astype(int)-1
-        # iend index from 1 because we need for slice
+        # adichtmat stores istart, iend as numbers counting from 1
+        istart = datastart2.astype(int)
         iend = dataend2.astype(int)
          # remember a slice "0:n" selects data[0]...data[n-1]
-        data=self.data['data'][0][slice(istart[0],iend[0])]
+        data=self.data['data'][0][slice(istart[0]-1,iend[0])]
         
         datastart4 = datastart2
         dataend4  = dataend2
@@ -446,20 +447,21 @@ class Adichtmatfile(object):
         dataend4[0] = sel_len_smp[0] + 1
         for ind in range(1,len(istart)):
             # remember a slice "0:n" selects data[0]...data[n-1]
-            data = np.concatenate((data, self.data['data'][0][slice(istart[ind],iend[ind])]))
+            data = np.concatenate((data, self.data['data'][0][slice(istart[ind]-1,iend[ind])]))
             datastart4[ind]=dataend4[ind-1]+1
             dataend4[ind] = datastart4[ind] + sel_len_smp[ind]
-        matblockdata[u'data'] = data
-        matblockdata[u'datastart'] = datastart4.reshape(-1, 1)
-        matblockdata[u'dataend'] = dataend4.reshape(-1, 1)
-       
 
+        # update mat_countents_out with cut data    
+        mat_contents_out[u'data'] = data
+        mat_contents_out[u'datastart'] = datastart4.reshape(-1, 1)
+        mat_contents_out[u'dataend'] = dataend4.reshape(-1, 1)
+       
         # following lines generate a cell array more elegantly 
         # but Matlab can't mempap and index this variable
-        # matblockdata[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
+        # mat_contents_out[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
         #                         zip(datastart2.astype(int), dataend2.astype(int))]
        
-        hdf5storage.write(matblockdata, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
+        hdf5storage.write(mat_contents_out, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
                           format='7.3')
 
         print(os.path.join(path, fn_out))
