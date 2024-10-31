@@ -433,7 +433,9 @@ class Adichtmatfile(object):
 
        
         ind = 0
-        istart = datastart2.astype(int)
+        # adichtmat stores istart counting from 1
+        istart = datastart2.astype(int)-1
+        # iend index from 1 because we need for slice
         iend = dataend2.astype(int)
          # remember a slice "0:n" selects data[0]...data[n-1]
         data=self.data['data'][0][slice(istart[0],iend[0])]
@@ -444,9 +446,7 @@ class Adichtmatfile(object):
         dataend4[0] = sel_len_smp[0] + 1
         for ind in range(1,len(istart)):
             # remember a slice "0:n" selects data[0]...data[n-1]
-            i1 = istart[ind]
-            i2 = iend[ind]
-            data = np.concatenate((data, self.data['data'][0][slice(i1,i2)]))
+            data = np.concatenate((data, self.data['data'][0][slice(istart[ind],iend[ind])]))
             datastart4[ind]=dataend4[ind-1]+1
             dataend4[ind] = datastart4[ind] + sel_len_smp[ind]
         matblockdata[u'data'] = data
@@ -464,7 +464,7 @@ class Adichtmatfile(object):
 
         print(os.path.join(path, fn_out))
         
-        print(f'export block {blk+1} interval data {i1} - {i2} done.')
+        print(f'export block {blk+1} interval data {istart[ind]} - {iend[ind]} done.')
         return 1    
 
     def save_to_hdf5(self, filename='') -> None:
