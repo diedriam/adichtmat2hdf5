@@ -1,18 +1,3 @@
-# labchart export matfile are saved in older matlab format 
-# adichtmat files are limited in size to be able to import into Matlab
-# this program packet converts adichtmat files into hdf5 files 
-# which can be imported without size limit
-#
-# function adichtmat_export_blocks_by_tok
-# this routine searches for identifier (tok_id) in records blocks files
-# and if token is found it exports the block labeled with short tok_id
-# start and stop can also be defined by tok_start and tok_end
-# token can be defined in xtokens.json file
-#
-# by Andre Diedrich
-# created 2021-03-12
-# last modified 2024-10-30
-
 import argparse
 from adichtmat import Adichtmatfile
 from xtokens import Xtoken, Xtokenset   
@@ -132,8 +117,7 @@ def main(args):
     
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description = "view ekf log file")
-   #parser.add_argument("filename", type=str)
-   parser.add_argument("-f","--filename", type=str, default = '/Users/diedriam/tmp/DATA_PhysiowaveDemo/2022-09-28_080000_SubJ_Day0_tilt/2022-09-28_080000_SubJ_Day0_tilt.mat')
+   parser.add_argument("filename", type=str)
    parser.add_argument("-i", "--tok_id", default="")
    parser.add_argument("-l", "--tok_longid", type=str, default="")
    parser.add_argument("-s", "--tok_start", type=str, default="")

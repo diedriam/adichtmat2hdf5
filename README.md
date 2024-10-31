@@ -23,8 +23,7 @@
 # created 2021-03-12
 # last modified 2024-10-30
 
-# tested with 
-# python version
+# tested with python version
 python 3.9.1
 
 # requirements 
