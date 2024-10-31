@@ -117,7 +117,7 @@ def main(args):
     
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description = "view ekf log file")
-   parser.add_argument("--filename", type=str, default = '/Users/diedriam/DATA/DATA_local/DATA_PhysiowaveDemo/2022-09-28_080000_SubJ_Day0_tilt/2022-09-28_080000_SubJ_Day0_tilt.mat')
+   parser.add_argument("filename", type=str)
    parser.add_argument("-i", "--tok_id", default="")
    parser.add_argument("-l", "--tok_longid", type=str, default="")
    parser.add_argument("-s", "--tok_start", type=str, default="")
