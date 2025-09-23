@@ -1,26 +1,46 @@
-import hdf5storage
+"""
+Adichtmatfile class to read record info and data
+"""
 import os
 import datetime as dt
 import pandas as pd
 import numpy as np
+import hdf5storage
 
 class Adichtmatfile(object):
-
+    """ 
+    Adichtmatfile class to read record info
+    write data in newer matlabformat which can be 
+    read by MATLAB for large data
+    """
     def __init__(self, filename):
+        """
+        This is the docstring for the __init__ method.
+        It initializes the class object with filename argument.
+        Args:
+        value: filename
+        """
         self.filename = filename
         self.matcontents = []
 
         self.data = []
         self.flg_loaded_info = False
         self.flg_loaded_data = False
-
+         
     def loadmat(self) -> bool:
-        fn_in = os.path.basename(self.filename)
+        """load data in matlab data
+        Returns:
+            bool: success
+        """
         if self.loadinfo():
             return self.loaddata()
         return False
-        
+    
     def loadinfo(self) -> bool:
+        """load data in matlab data
+        Returns:
+            bool: success
+        """
         fn_in = os.path.basename(self.filename)
         params = {
             'blocktimes',
@@ -47,9 +67,8 @@ class Adichtmatfile(object):
                 if not params.isdisjoint(self.mat_contents):
                     self.flg_loaded_info = True
                     print('loading adicht matlab info ' + fn_in + ' done.')
-
                 else:
-                     print('data structure does not match adicht format in ' + fn_in +'.')        
+                     print('data structure does not match adicht format in ' + fn_in +'.')       
             except:    
                 print('loading adicht matlab info ' + fn_in + ' failed.')
             return self.flg_loaded_info        
@@ -212,12 +231,24 @@ class Adichtmatfile(object):
 
 
     def get_comments_table(self, blk = -1, from_tick_pos = 0, to_tick_pos = -1, format='long') -> pd.DataFrame:
+        """
+        export comments as a dataframe 
         # blk is block number counting from 0, blk = blk_id -1
         # comtab: [sig_id, blk_id, tick_pos , type_id , text_id]
         # comments string = comtext[text_id]
         # note: labchart stores blk_id from 1...
         # note: labchart stores tick_pos from 0 = block start
 
+        Args:
+            blk (int, optional): block number counting from 0. Defaults to -1.
+            from_tick_pos (int, optional): from position in number of ticks. Defaults to 0.
+            to_tick_pos (int, optional): to position in number of ticks. Defaults to -1.
+            format (str, optional): format of table can be long or wide. Defaults to 'long'.
+
+        Returns:
+            pd.DataFrame: _description_
+        """
+        
         comtab = self.mat_contents['com']
         comtext = self.mat_contents['comtext']
 
@@ -460,18 +491,14 @@ class Adichtmatfile(object):
         # but Matlab can't mempap and index this variable
         # mat_contents_out[u'data'] = [self.data['data'][0][istart - 1:iend] for istart, iend in
         #                         zip(datastart2.astype(int), dataend2.astype(int))]
-       
-        hdf5storage.write(mat_contents_out, '.', os.path.join(path, fn_out), matlab_compatible=True, oned_as='col',
-                          format='7.3')
-
+        hdf5storage.write(mat_contents_out, path='.', filename=os.path.join(path, fn_out), truncate_existing=True,
+                          matlab_compatible=True, oned_as='col',format='7.3')
         print(os.path.join(path, fn_out))
-        
-        print(f'export block {blk+1} interval data {istart[ind]} - {iend[ind]} done.')
-        return 1    
+        print(f'export block {blk+1} interval data {istart[ind]} - {iend[ind]} done.') 
 
     def save_to_hdf5(self, filename='') -> None:
         """
-        saves file in hdf5 format
+        save file in hdf5 format
         labchart export matfile are saved in older matlab format
         which is limited in size for import into Matlab
         save_to_hdf5 converts into newer format
@@ -511,6 +538,6 @@ class Adichtmatfile(object):
         self.mat_contents['data'] = self.data['data']
 
         print(f'saving as hdf5 matlab file {fn_out}...')
-        hdf5storage.write(self.mat_contents, '.', os.path.join(path, fn_out), matlab_compatible=True, format='7.3',oned_as='col')
+        hdf5storage.write(self.mat_contents, path = '.', filename = os.path.join(path, fn_out), truncate_existing=True,
+                          matlab_compatible=True, format='7.3',oned_as='col')
         print('save hdf5 done.')
-
