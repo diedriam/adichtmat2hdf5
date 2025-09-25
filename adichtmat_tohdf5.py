@@ -18,7 +18,7 @@ def adichtmat_tohdf5(filename:str):
 
 def main(filename):
     """
-    main
+    main function
     """
     adichtmat_tohdf5(filename)
      
