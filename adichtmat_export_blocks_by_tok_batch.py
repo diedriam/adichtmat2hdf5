@@ -1,11 +1,14 @@
+"""
+exports blocks identified by token
+"""
 import argparse
-from adichtmat import Adichtmatfile
-from xtokens import Xtoken, Xtokenset   
 import os
 import sys
 from pathlib import Path
 from shutil import copyfile
 import adichtmat_export_blocks_by_tok
+from adichtmat import Adichtmatfile
+from xtokens import Xtoken, Xtokenset   
 
 def adichtmat_export_blocks_by_tok_batch(from_path,
     xtoken_def:str = "", ext=None) -> None:
