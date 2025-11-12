@@ -40,11 +40,10 @@ def main(args):
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description = "export blocks by tok batch")
-   # parser.add_argument("-f", "--from_path", type=str, default = '')
+   parser.add_argument("-f", "--from_path", type=str, default = '')
    parser.add_argument("--ext", type=str, default = None)
    parser.add_argument("-x", "--xtoken_def", type=str, default="./conf/xtokens.json")
    args = parser.parse_args()
-   args.from_path = "/Volumes/AD1/DATA_POTS1/DATA_POTS_Vagal/VagalStim_Nemos_Milan/from_Surat/by_patient/H63_PalM/"
    main(args)
 
 
