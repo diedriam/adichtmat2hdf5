@@ -1,56 +1,11 @@
 [
     {
-        "tok_id": "VM",
-        "tok_longid": "@Valsalva Maneuver",
-        "tok_start": "[BLK_VM",
-        "tok_end": "BLK_VM]"
-    },
-    {
-        "tok_id": "NB",
-        "tok_longid": "@Normal Breathing",
-        "tok_start": "[BLK_NB",
-        "tok_end": "BLK_NB]"
-    },
-    {
-        "tok_id": "NS010",
-        "tok_longid": "@Necksuction 0.1 Hz",
-        "tok_start": "[BLK_NS010",
-        "tok_end": "BLK_NS010]"
-    },
-    {
-        "tok_id": "NSRND",
-        "tok_longid": "@Randomized Neck Suction",
-        "tok_start": "[BLK_NSRND",
-        "tok_end": "BLK_NSRND]"
-    },
-    {
-        "tok_id": "CB010",
-        "tok_longid": "@Controlled Breathing 0.1 Hz",
-        "tok_start": "[BLK_CB010",
-        "tok_end": "BLK_CB010]"
-    },
-    {
-        "tok_id": "CB025",
-        "tok_longid": "@Controlled Breathing 0.25 Hz",
-        "tok_start": "[BLK_CB025",
-        "tok_end": "BLK_CB025]"
-    },
-    {
-        "tok_id": "HV",
-        "tok_longid": "@Hyperventilation",
-        "tok_start": "[BLK_HV",
-        "tok_end": "BLK_HV]"
-    },
-    {
-        "tok_id": "BH",
-        "tok_longid": "@Breathhold",
-        "tok_start": "[BLK_BH",
-        "tok_end": "BLK_BH]"
-    },
-    {
-        "tok_id": "TT",
-        "tok_longid": "@HUT15",
-        "tok_start": "[BLK_TT",
-        "tok_end": "BLK_TT]"
+        "tok_id"    : "VM",
+        "tok_longid": "Valsalva",
+        "tok_start" : "",
+        "tok_stop"   : "",
+        "ofs_start": -120,
+        "ofs_stop": 120
     }
-]
+            
+ ]

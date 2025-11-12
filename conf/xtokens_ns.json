@@ -3,13 +3,17 @@
         "tok_id"    : "NS010",
         "tok_longid": "@Necksuction 0.1 Hz",
         "tok_start" : "[BLK_NS010",
-        "tok_end"   : "BLK_NS010]"
+        "tok_stop"   : "BLK_NS010]",
+        "ofs_start": 0,
+        "ofs_stop": 0
     },
     {
         "tok_id": "NSRND",
         "tok_longid": "@Randomized Neck Suction",
         "tok_start": "[BLK_NSRND",
-        "tok_end": "BLK_NSRND]"
+        "tok_stop": "BLK_NSRND]",
+        "ofs_start": 0,
+        "ofs_stop": 0
     }
 
 ]

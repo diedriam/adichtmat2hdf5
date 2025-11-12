@@ -1,0 +1,29 @@
+[   
+    {
+        "tok_id"    : "VM",
+        "tok_longid": "@Valsalva Maneuver",
+        "tok_start" : "[BLK_VM",
+        "tok_end"   : "BLK_VM]",
+        "ofs_start": 0,
+        "ofs_stop": 0
+    },
+    
+    {
+        "tok_id": "VM",
+        "tok_longid": "@Valsalva Maneuver",
+        "tok_start": "VM_Start",
+        "tok_end": "VM_Stop",
+        "ofs_start": -120,
+        "ofs_stop": 120
+        },
+
+    {
+        "tok_id"    : "VM",
+        "tok_longid": "Valsalva",
+        "tok_start" : "",
+        "tok_end"   : "",
+        "ofs_start": -120,
+        "ofs_stop": 120
+    }
+        
+ ]

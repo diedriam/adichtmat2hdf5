@@ -7,13 +7,23 @@ from pathlib import Path
 from shutil import copyfile
 
 
-def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
-    """export block identified by tok_longid and interval defined by tok_start and tok_stop"""
-    if xtoken_def == None:
-            xtoken_def =  "./conf/xtokens.json"
-    xtokenset = Xtokenset(filename=xtoken_def)
-    xtokenset.load()
-    tokens = xtokenset.xtokens
+def adichtmat_export_blocks_by_tok(
+    filename: str,
+    tok_id: str = "",
+    tok_longid: str = "",
+    tok_start: str = "",
+    tok_end: str = "",
+    xtoken_def: str = "./conf/xtokens.json",
+):
+    """export block identified by tok_longid and interval defined by tok_start and tok_end"""
+    if tok_longid == "":
+        tok_longid = tok_id
+    if tok_id == "":
+        xtokenset = Xtokenset(filename=xtoken_def)
+        xtokenset.load()
+        tokens = xtokenset.xtokens
+    else:
+        tokens = [Xtoken(tok_id, tok_longid, tok_start, tok_end)]
     print(tokens)
 
     path = os.path.dirname(filename)
@@ -27,13 +37,9 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
     df = ad.get_comments_table()
 
     """ extract NIBP """
-   # df[["SBP", "DBP", "MBP", "HR"]] = df.comments.str.extract(
-   #     "@NIBP = (\d+) / (\d+) \((\d+)\)\, (\d+)"
-   # )
-    df[["SBP", "DBP"]] = df.comments.str.extract(
-        r"(\d+)/(\d+)"
+    df[["SBP", "DBP", "MBP", "HR"]] = df.comments.str.extract(
+        "@NIBP = (\d+) / (\d+) \((\d+)\)\, (\d+)"
     )
-    
     df.drop(columns=["sig_id", "type_id", "text_id", "tick_pos"], inplace=True)
 
     path = os.path.dirname(ad.filename)
@@ -50,7 +56,7 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
         tok_id = tok.tok_id
         tok_longid = tok.tok_longid
         tok_start = tok.tok_start
-        tok_stop = tok.tok_stop
+        tok_end = tok.tok_end
 
         """search main tok id """
         """time info in output filename is derived from main tokid"""
@@ -68,8 +74,8 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
                 longid_dtm = row.date_time
 
                 """"search for closest start tok before the longid"""
-                longid_tick = row.tick_pos
-                start_tick = longid_tick
+                start_tick = -1
+                longid_tick = -1
                 if len(tok_start) > 0:
                     a = ad.find_comment(
                         tok_start,
@@ -81,53 +87,44 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
                         start_tick = a.tick_pos.iloc[-1]
 
                 """search for closest stop tok after the longid"""
-                stop_tick = start_tick
-                if len(tok_stop) > 0:
+                stop_tick = -1
+                if len(tok_end) > 0:
                     b = ad.find_comment(
-                        tok_stop,
+                        tok_end,
                         longid_blk,
                         from_tick_pos=start_tick,
                         searchmode="startswith",
                     )
                     if not b.empty:
                         stop_tick = b.tick_pos.iloc[0]
-                    else:
-                        stop_tick = start_tick
+
+                fn_root = "{}_blk{}_{}_T{}".format(
+                    os.path.splitext(fn_base)[0],
+                    longid_blk + 1,
+                    tok_id,
+                    longid_dtm.strftime("%H%M%S"),
+                )
+                path_out = os.path.join(path, "cuts")
+                if not os.path.isdir(path_out):
+                    os.mkdir(path_out)
+                path_out = os.path.join(path, "cuts", fn_root)
+                if not os.path.isdir(path_out):
+                    os.mkdir(path_out)
+                print(f"export blk {fn_root}.mat ...")
 
                 tickrate = ad.get_tickrates(longid_blk)
                 datalen = max(ad.get_datalen_ticks(None, longid_blk))
                 if start_tick > -1:
-                    if stop_tick > -1:
-                        stop_tick = start_tick
-                    start_tick2 = start_tick-tickrate*tok.ofs_start
-                    stop_tick2 = stop_tick+tickrate*tok.ofs_stop
-                    
-                    # check start is in recording
+                    start_tick2 = start_tick-tickrate*120
+                    stop_tick2 = start_tick+tickrate*120
                     if start_tick2 > -1:
                         start_tick = start_tick2
                     else: 
                         start_tick = 0
-                    # check stop is in recording
                     if (stop_tick2 > -1) & (stop_tick2 < datalen):
                         stop_tick = stop_tick2
                     else:
                         stop_tick = datalen
-                
-                    # export
-                    fn_root = "{}_blk{}_{}_T{}".format(
-                        os.path.splitext(fn_base)[0],
-                        longid_blk + 1,
-                        tok_id,
-                        longid_dtm.strftime("%H%M%S"),
-                    )
-                    path_out = os.path.join(path, "cuts")
-                    if not os.path.isdir(path_out):
-                        os.mkdir(path_out)
-                    path_out = os.path.join(path, "cuts", fn_root)
-                    if not os.path.isdir(path_out):
-                        os.mkdir(path_out)
-                    print(f"export blk {fn_root}.mat ...")
-                
                     ad.export_block(
                         longid_blk,
                         start_tick=start_tick,
@@ -151,14 +148,21 @@ def main(args):
     print(args)
     adichtmat_export_blocks_by_tok(
         args.filename,
+        tok_id=args.tok_id,
+        tok_longid=args.tok_longid,
+        tok_start=args.tok_start,
+        tok_end=args.tok_end,
         xtoken_def=args.xtoken_def,
     )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="view ekf log file")
-    #parser.add_argument("filename", type=str)
+    parser.add_argument("filename", type=str)
+    parser.add_argument("-i", "--tok_id", default="")
+    parser.add_argument("-l", "--tok_longid", type=str, default="")
+    parser.add_argument("-s", "--tok_start", type=str, default="")
+    parser.add_argument("-e", "--tok_end", type=str, default="")
     parser.add_argument("-x", "--xtoken_def", type=str, default="./conf/xtokens.json")
     args = parser.parse_args()
-    args.filename = '/Volumes/AD1/DATA_POTS1/DATA_POTS_Vagal/VagalStim_Nemos_Milan/from_Surat/by_patient/H63_PalM/2022-03-17_093213_H630_PalM/'
     main(args)
