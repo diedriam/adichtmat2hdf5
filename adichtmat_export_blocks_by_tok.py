@@ -94,12 +94,14 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
                     else:
                         stop_tick = start_tick
 
-                tickrate = ad.get_tickrates(longid_blk)
-                datalen = max(ad.get_datalen_ticks(None, longid_blk))
+                tickrate = ad.get_tickrates(blk=longid_blk)
+                datalen = ad.get_datalen_ticks(blk = longid_blk)
+                tick_lenmax = max(datalen)
+             
                 if start_tick > -1:
                     if stop_tick > -1:
                         stop_tick = start_tick
-                    start_tick2 = start_tick-tickrate*tok.ofs_start
+                    start_tick2 = start_tick+tickrate*tok.ofs_start
                     stop_tick2 = stop_tick+tickrate*tok.ofs_stop
                     
                     # check start is in recording
@@ -108,10 +110,10 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
                     else: 
                         start_tick = 0
                     # check stop is in recording
-                    if (stop_tick2 > -1) & (stop_tick2 < datalen):
+                    if (stop_tick2 > -1) & (stop_tick2 < tick_lenmax):
                         stop_tick = stop_tick2
                     else:
-                        stop_tick = datalen
+                        stop_tick = tick_lenmax-1
                 
                     # export
                     fn_root = "{}_blk{}_{}_T{}".format(
@@ -149,16 +151,17 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
 
 def main(args):
     print(args)
+    fn = "G:\\Surat_projects\\VagalStim_Nemos_Milan\\by_patient\\H32_SelM\\2022-04-29_162632_H322_SelM\\2022-04-29_162632_H322_SelM.mat"
     adichtmat_export_blocks_by_tok(
-        args.filename,
+     #   args.filename,
+        fn,
         xtoken_def=args.xtoken_def,
     )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="view ekf log file")
-    #parser.add_argument("filename", type=str)
+    # parser.add_argument("filename", type=str)
     parser.add_argument("-x", "--xtoken_def", type=str, default="./conf/xtokens.json")
     args = parser.parse_args()
-    args.filename = '/Volumes/AD1/DATA_POTS1/DATA_POTS_Vagal/VagalStim_Nemos_Milan/from_Surat/by_patient/H63_PalM/2022-03-17_093213_H630_PalM/'
     main(args)
