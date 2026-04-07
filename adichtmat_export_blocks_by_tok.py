@@ -27,11 +27,12 @@ def adichtmat_export_blocks_by_tok(filename: str, xtoken_def: str = None):
     df = ad.get_comments_table()
 
     """ extract NIBP """
-   # df[["SBP", "DBP", "MBP", "HR"]] = df.comments.str.extract(
-   #     "@NIBP = (\d+) / (\d+) \((\d+)\)\, (\d+)"
-   # )
-    df[["SBP", "DBP"]] = df.comments.str.extract(
-        r"(\d+)/(\d+)"
+  
+    #df[["SBP", "DBP"]] = df.comments.str.extract(
+    #    r"(\d+)/(\d+)"
+    #)
+    df[["SBP", "DBP", "MBP", "HR"]] = df.comments.str.extract(
+        "@NIBP = (\d+) / (\d+) \((\d+)\)\, (\d+)"
     )
     
     df.drop(columns=["sig_id", "type_id", "text_id", "tick_pos"], inplace=True)
