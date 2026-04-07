@@ -7,7 +7,7 @@ def filepicker()->str:
     # File picker with filters
     file_path, _ = QFileDialog.getOpenFileName(
         None,
-        "Select an Image",
+        "Select LabChart Export Mat File",
         "",
         "ADICHTMAT Mat File (*.mat);;All Files (*)"
     )
